@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.balanceeat.demo.domain.diet.mapper.DietMapper">
+    <insert id="insertDiet" parameterType="com.balanceeat.demo.domain.diet.entity.Diet">
+        INSERT INTO diets (
+            user_id,
+            diet_date,
+            meal_type,
+            food_name,
+            amount,
+            calories,
+            protein,
+            fat,
+            carbohydrates,
+            note,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{userId},
+            #{dietDate},
+            #{mealType},
+            #{foodName},
+            #{amount},
+            #{calories},
+            #{protein},
+            #{fat},
+            #{carbohydrates},
+            #{note},
+            NOW(),
+            NOW()
+        )
+    </insert>
+
+    <select id="findDietSummariesByDateRange" resultType="com.balanceeat.demo.domain.diet.entity.DietSummary">
+        WITH DietSummaries AS (
+            SELECT 
+                d.diet_date as summaryDate,
+                SUM(CASE WHEN d.meal_type = 'BREAKFAST' THEN d.calories ELSE 0 END) as breakfastCalories,
+                SUM(CASE WHEN d.meal_type = 'BREAKFAST' THEN d.protein ELSE 0 END) as breakfastProtein,
+                SUM(CASE WHEN d.meal_type = 'BREAKFAST' THEN d.fat ELSE 0 END) as breakfastFat,
+                SUM(CASE WHEN d.meal_type = 'BREAKFAST' THEN d.carbohydrates ELSE 0 END) as breakfastCarbohydrates,
+                SUM(CASE WHEN d.meal_type = 'LUNCH' THEN d.calories ELSE 0 END) as lunchCalories,
+                SUM(CASE WHEN d.meal_type = 'LUNCH' THEN d.protein ELSE 0 END) as lunchProtein,
+                SUM(CASE WHEN d.meal_type = 'LUNCH' THEN d.fat ELSE 0 END) as lunchFat,
+                SUM(CASE WHEN d.meal_type = 'LUNCH' THEN d.carbohydrates ELSE 0 END) as lunchCarbohydrates,
+                SUM(CASE WHEN d.meal_type = 'DINNER' THEN d.calories ELSE 0 END) as dinnerCalories,
+                SUM(CASE WHEN d.meal_type = 'DINNER' THEN d.protein ELSE 0 END) as dinnerProtein,
+                SUM(CASE WHEN d.meal_type = 'DINNER' THEN d.fat ELSE 0 END) as dinnerFat,
+                SUM(CASE WHEN d.meal_type = 'DINNER' THEN d.carbohydrates ELSE 0 END) as dinnerCarbohydrates,
+                SUM(d.calories) as totalCalories,
+                SUM(d.protein) as totalProtein,
+                SUM(d.fat) as totalFat,
+                SUM(d.carbohydrates) as totalCarbohydrates
+            FROM diets d
+            WHERE d.user_id = #{userId}
+            AND d.diet_date BETWEEN #{start} AND #{end}
+            GROUP BY d.diet_date
+        ),
+        BreakfastDiets AS (
+            SELECT 
+                d.diet_date,
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', d.id,
+                        'foodName', d.food_name,
+                        'amount', d.amount,
+                        'calories', d.calories,
+                        'protein', d.protein,
+                        'fat', d.fat,
+                        'carbohydrates', d.carbohydrates,
+                        'note', d.note
+                    )
+                ) as breakfast
+            FROM diets d
+            WHERE d.user_id = #{userId}
+            AND d.meal_type = 'BREAKFAST'
+            AND d.diet_date BETWEEN #{start} AND #{end}
+            GROUP BY d.diet_date
+        ),
+        LunchDiets AS (
+            SELECT 
+                d.diet_date,
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', d.id,
+                        'foodName', d.food_name,
+                        'amount', d.amount,
+                        'calories', d.calories,
+                        'protein', d.protein,
+                        'fat', d.fat,
+                        'carbohydrates', d.carbohydrates,
+                        'note', d.note
+                    )
+                ) as lunch
+            FROM diets d
+            WHERE d.user_id = #{userId}
+            AND d.meal_type = 'LUNCH'
+            AND d.diet_date BETWEEN #{start} AND #{end}
+            GROUP BY d.diet_date
+        ),
+        DinnerDiets AS (
+            SELECT 
+                d.diet_date,
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', d.id,
+                        'foodName', d.food_name,
+                        'amount', d.amount,
+                        'calories', d.calories,
+                        'protein', d.protein,
+                        'fat', d.fat,
+                        'carbohydrates', d.carbohydrates,
+                        'note', d.note
+                    )
+                ) as dinner
+            FROM diets d
+            WHERE d.user_id = #{userId}
+            AND d.meal_type = 'DINNER'
+            AND d.diet_date BETWEEN #{start} AND #{end}
+            GROUP BY d.diet_date
+        )
+        SELECT 
+            ds.*,
+            bd.breakfast,
+            ld.lunch,
+            dd.dinner
+        FROM DietSummaries ds
+        LEFT JOIN BreakfastDiets bd ON ds.summaryDate = bd.diet_date
+        LEFT JOIN LunchDiets ld ON ds.summaryDate = ld.diet_date
+        LEFT JOIN DinnerDiets dd ON ds.summaryDate = dd.diet_date
+        ORDER BY ds.summaryDate DESC
+    </select>
+
+    <update id="updateDiet" parameterType="com.balanceeat.demo.domain.diet.entity.Diet">
+        UPDATE diets
+        SET
+            amount = #{amount},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteDiet" parameterType="long">
+        DELETE FROM diets WHERE id = #{id}
+    </delete>
+
+    <select id="findDietsByDate" resultType="com.balanceeat.demo.domain.diet.entity.Diet">
+        SELECT 
+            id,
+            user_id as userId,
+            diet_date as dietDate,
+            meal_type as mealType,
+            food_name as foodName,
+            amount,
+            calories,
+            protein,
+            fat,
+            carbohydrates,
+            note,
+            created_at as createdAt,
+            updated_at as updatedAt
+        FROM diets
+        WHERE user_id = #{userId}
+        AND diet_date = #{date}
+        ORDER BY meal_type, id
+    </select>
+</mapper> 

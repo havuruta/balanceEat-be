@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: balanceEat
+  datasource:
+      url: jdbc:mysql://localhost:3306/balance_eat?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8&useUnicode=true
+      username: root
+      password: 1234
+      driver-class-name: com.mysql.cj.jdbc.Driver
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.balanceeat.demo.domain
+  configuration:
+    map-underscore-to-camel-case: true
+
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+
+jwt:
+  secret: ${JWT_SECRET:6781ee3f7bbb335f7285c646bee0032478280335400ce6ac70f76f2ded5a319a6168fb8f56d3e26659a8d95d6ad1f568eaab227a4346360e5a837ffdd184c89cc7a504eeadab54d35720b52ed4048056ee3b38c5e40e813e810c619dd47290b655d639674dae4a503008a246b15d62d596e052375ebd4d471feb367c1484f4b5}
+  access-token-validity-in-seconds: 3600
+  refresh-token-validity-in-seconds: 86400

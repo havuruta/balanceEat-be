@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.balanceeat.demo.domain.nutrition.mapper.NutritionMapper">
+    <select id="selectById" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+        SELECT id, name, calories, protein, carbohydrates, fat, description
+        FROM nutrition
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+        SELECT id, name, calories, protein, carbohydrates, fat, description
+        FROM nutrition
+    </select>
+    
+    <select id="searchByDescription" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+        SELECT id, name, calories, protein, carbohydrates, fat, description
+        FROM nutrition
+        WHERE description LIKE CONCAT('%', #{description}, '%')
+    </select>
+
+    <select id="searchByName" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+        SELECT id, name, calories, protein, carbohydrates, fat, description
+        FROM nutrition
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+    </select>
+</mapper> 
