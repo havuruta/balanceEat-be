@@ -25,37 +25,33 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequestDTO loginRequestDTO, HttpServletResponse httpServletResponse, RedirectAttributes redirectAttributes) {
-        log.info("로그인 시도: {}", loginRequestDTO.getEmail());
-        authService.login(loginRequestDTO, httpServletResponse);
-        log.info("로그인 성공: {}", loginRequestDTO.getEmail());
-        
-        return ResponseEntity.ok("login success");
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
+        authService.login(loginRequestDTO, response);
+        return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<UserResponseDTO> register(@RequestBody RegisterRequestDTO registerRequestDTO) {
-        log.info("회원가입 요청 받음: {}", registerRequestDTO);
-        return ResponseEntity.ok(authService.register(registerRequestDTO));
-    }
-    
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         authService.logout(request, response);
-        return ResponseEntity.ok("logout success");
+        return ResponseEntity.ok().build();
     }
-    
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponseDTO> register(@RequestBody RegisterRequestDTO registerRequestDTO) {
+        UserResponseDTO userResponseDTO = authService.register(registerRequestDTO);
+        return ResponseEntity.ok(userResponseDTO);
+    }
+
     @PostMapping("/reissue")
-    public ResponseEntity<String> reissue(HttpServletRequest request, HttpServletResponse httpServletResponse ) {
-        authService.reissue(request, httpServletResponse);
-        return ResponseEntity.ok("reissue success");
+    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
+        authService.reissue(request, response);
+        return ResponseEntity.ok().build();
     }
-    
 } 
