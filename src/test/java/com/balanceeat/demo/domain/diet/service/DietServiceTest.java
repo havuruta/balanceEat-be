@@ -1,34 +1,36 @@
 package com.balanceeat.demo.domain.diet.service;
 
-import com.balanceeat.demo.domain.diet.dto.DietAmountRequestDTO;
-import com.balanceeat.demo.domain.diet.dto.DietByDateDTO;
-import com.balanceeat.demo.domain.diet.dto.NutritionSummaryDTO;
+import com.balanceeat.demo.domain.diet.dto.DietAddRequestDTO;
+import com.balanceeat.demo.domain.diet.dto.DietUpdateRequestDTO;
 import com.balanceeat.demo.domain.diet.entity.Diet;
 import com.balanceeat.demo.domain.diet.entity.DietSummary;
+import com.balanceeat.demo.domain.diet.entity.MealType;
 import com.balanceeat.demo.domain.diet.exception.DietNotFoundException;
-import com.balanceeat.demo.domain.diet.fixture.DietFixture;
 import com.balanceeat.demo.domain.diet.mapper.DietMapper;
+import com.balanceeat.demo.domain.diet.mapper.DietSummaryMapper;
 import com.balanceeat.demo.domain.diet.service.impl.DietServiceImpl;
+import com.balanceeat.demo.domain.nutrition.entity.Nutrition;
+import com.balanceeat.demo.domain.nutrition.mapper.NutritionMapper;
+import com.balanceeat.demo.global.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,204 +39,156 @@ class DietServiceTest {
     @Mock
     private DietMapper dietMapper;
 
+    @Mock
+    private DietSummaryMapper dietSummaryMapper;
+
+    @Mock
+    private NutritionMapper nutritionMapper;
+
     @InjectMocks
     private DietServiceImpl dietService;
 
     private Long testUserId;
     private LocalDate testDate;
-    private DietFixture breakfastFixture;
-    private DietFixture lunchFixture;
+    private Nutrition testNutrition;
 
     @BeforeEach
     void setUp() {
         testUserId = 1L;
         testDate = LocalDate.now();
-        breakfastFixture = DietFixture.breakfast(testUserId, testDate, 300.0, 20.0, 10.0, 40.0);
-        lunchFixture = DietFixture.lunch(testUserId, testDate, 500.0, 30.0, 15.0, 60.0);
+        testNutrition = Nutrition.builder()
+            .id(1L)
+            .name("테스트 음식")
+            .calories(300.0)
+            .protein(20.0)
+            .fat(10.0)
+            .carbohydrates(40.0)
+            .build();
     }
 
     @Test
-    @DisplayName("식단 추가 시 DietSummary가 생성되어야 함")
-    void addDiet_ShouldCreateDietSummary() {
+    @DisplayName("식단 일괄 추가")
+    void batchAddDiets() {
         // given
-        Diet breakfast = breakfastFixture.instance();
-        DietAmountRequestDTO request = DietAmountRequestDTO.builder()
-                .dietId(breakfast.getId())
-                .amount(breakfast.getAmount())
-                .build();
+        DietAddRequestDTO request = new DietAddRequestDTO();
+        DietAddRequestDTO.DietSimpleDTO diet = new DietAddRequestDTO.DietSimpleDTO();
+        diet.setNutritionId(1L);
+        diet.setAmount("100");
+        diet.setNote("테스트");
+        diet.setMealType(MealType.BREAKFAST);
+        diet.setDietDate(testDate.toString());
+        diet.setMealTime(LocalTime.now());
+        request.setDiets(Arrays.asList(diet));
 
-        given(dietMapper.findDietById(breakfast.getId())).willReturn(breakfast);
-        given(dietMapper.findDietsByDate(testUserId, testDate))
-                .willReturn(List.of(breakfast));
-        given(dietMapper.findDietSummary(testUserId, testDate))
-                .willReturn(null);
+        given(nutritionMapper.findByIds(any())).willReturn(Arrays.asList(testNutrition));
+        given(dietSummaryMapper.findByDateAndUserId(eq(testDate), eq(testUserId))).willReturn(null);
 
         // when
-        dietService.addDiet(request, testUserId);
+        dietService.batchAddDiets(request, testUserId);
 
         // then
-        then(dietMapper).should().insertDiet(any(Diet.class));
-        then(dietMapper).should().insertDietSummary(argThat(summary -> {
-            assertThat(summary).satisfies(s -> {
-                assertThat(s.getTotalCalories()).isCloseTo(300.0, within(0.001));
-                assertThat(s.getTotalProtein()).isCloseTo(20.0, within(0.001));
-                assertThat(s.getTotalFat()).isCloseTo(10.0, within(0.001));
-                assertThat(s.getTotalCarbohydrates()).isCloseTo(40.0, within(0.001));
-            });
-            return true;
-        }));
+        verify(dietMapper).batchInsert(any());
+        verify(dietSummaryMapper).insert(any());
     }
 
     @Test
-    @DisplayName("식단 수정 시 DietSummary가 업데이트되어야 함")
-    void updateDiet_ShouldUpdateDietSummary() {
+    @DisplayName("식단 요약 조회")
+    void getDietSummariesByDateRange() {
         // given
-        Diet breakfast = breakfastFixture.instance();
-        DietAmountRequestDTO request = DietAmountRequestDTO.builder()
-                .dietId(breakfast.getId())
-                .amount(200.0)
-                .build();
-
-        given(dietMapper.findDietById(breakfast.getId())).willReturn(breakfast);
-        given(dietMapper.findDietsByDate(testUserId, testDate))
-                .willReturn(List.of(breakfast));
-        given(dietMapper.findDietSummary(testUserId, testDate))
-                .willReturn(DietSummary.builder()
-                        .id(1L)
-                        .userId(testUserId)
-                        .summaryDate(testDate)
-                        .breakfastCalories(300.0)
-                        .breakfastProtein(20.0)
-                        .breakfastFat(10.0)
-                        .breakfastCarbohydrates(40.0)
-                        .build());
+        LocalDate start = testDate;
+        LocalDate end = testDate.plusDays(7);
+        List<DietSummary> expectedSummaries = Arrays.asList(
+            DietSummary.create(testUserId, start),
+            DietSummary.create(testUserId, end)
+        );
+        given(dietSummaryMapper.findByDateRange(eq(testUserId), eq(start), eq(end)))
+            .willReturn(expectedSummaries);
 
         // when
-        dietService.updateDiet(request, testUserId);
+        List<DietSummary> actualSummaries = dietService.getDietSummariesByDateRange(testUserId, start, end);
 
         // then
-        then(dietMapper).should().updateDiet(any(Diet.class));
-        then(dietMapper).should().updateDietSummary(argThat(summary -> {
-            assertThat(summary).satisfies(s -> {
-                assertThat(s.getTotalCalories()).isCloseTo(300.0, within(0.001));
-                assertThat(s.getTotalProtein()).isCloseTo(20.0, within(0.001));
-                assertThat(s.getTotalFat()).isCloseTo(10.0, within(0.001));
-                assertThat(s.getTotalCarbohydrates()).isCloseTo(40.0, within(0.001));
-            });
-            return true;
-        }));
+        assertThat(actualSummaries).hasSize(2);
+        assertThat(actualSummaries).isEqualTo(expectedSummaries);
     }
 
     @Test
-    @DisplayName("식단 삭제 시 DietSummary가 업데이트되어야 함")
-    void deleteDiet_ShouldUpdateDietSummary() {
+    @DisplayName("식단 수정")
+    void updateDiet() {
         // given
-        Diet breakfast = breakfastFixture.instance();
-        ArgumentCaptor<Long> dietIdCaptor = ArgumentCaptor.forClass(Long.class);
-        
-        given(dietMapper.findDietById(breakfast.getId())).willReturn(breakfast);
-        given(dietMapper.findDietsByDate(testUserId, testDate))
-                .willReturn(List.of());
-        given(dietMapper.findDietSummary(testUserId, testDate))
-                .willReturn(DietSummary.builder()
-                        .id(1L)
-                        .userId(testUserId)
-                        .summaryDate(testDate)
-                        .breakfastCalories(300.0)
-                        .breakfastProtein(20.0)
-                        .breakfastFat(10.0)
-                        .breakfastCarbohydrates(40.0)
-                        .build());
+        Long dietId = 1L;
+        Diet diet = Diet.create(testUserId, 1L, 100, "테스트", MealType.BREAKFAST, testDate, LocalTime.now());
+        DietUpdateRequestDTO request = new DietUpdateRequestDTO();
+        request.setAmount(200);
+        request.setNote("수정된 테스트");
+        request.setMealType(MealType.LUNCH);
+        request.setMealTime(LocalTime.now().toString());
+
+        given(dietMapper.findById(dietId)).willReturn(Optional.of(diet));
 
         // when
-        dietService.deleteDiet(breakfast.getId());
+        dietService.updateDiet(dietId, request, testUserId);
 
         // then
-        then(dietMapper).should().deleteDiet(dietIdCaptor.capture());
-        assertThat(dietIdCaptor.getValue()).isEqualTo(breakfast.getId());
-        then(dietMapper).should().updateDietSummary(argThat(summary -> {
-            assertThat(summary).satisfies(s -> {
-                assertThat(s.getTotalCalories()).isCloseTo(0.0, within(0.001));
-                assertThat(s.getTotalProtein()).isCloseTo(0.0, within(0.001));
-                assertThat(s.getTotalFat()).isCloseTo(0.0, within(0.001));
-                assertThat(s.getTotalCarbohydrates()).isCloseTo(0.0, within(0.001));
-            });
-            return true;
-        }));
+        verify(dietMapper).update(any(Diet.class));
     }
 
     @Test
-    @DisplayName("여러 식단 추가 시 DietSummary가 정확하게 계산되어야 함")
-    void addMultipleDiets_ShouldCalculateDietSummaryCorrectly() {
-        // given
-        Diet breakfast = breakfastFixture.instance();
-        Diet lunch = lunchFixture.instance();
-
-        DietAmountRequestDTO request1 = DietAmountRequestDTO.builder()
-                .dietId(breakfast.getId())
-                .amount(breakfast.getAmount())
-                .build();
-        DietAmountRequestDTO request2 = DietAmountRequestDTO.builder()
-                .dietId(lunch.getId())
-                .amount(lunch.getAmount())
-                .build();
-
-        given(dietMapper.findDietById(breakfast.getId())).willReturn(breakfast);
-        given(dietMapper.findDietById(lunch.getId())).willReturn(lunch);
-        given(dietMapper.findDietsByDate(testUserId, testDate))
-                .willReturn(List.of(breakfast))
-                .willReturn(List.of(breakfast, lunch));
-        given(dietMapper.findDietSummary(testUserId, testDate))
-                .willReturn(null)
-                .willReturn(DietSummary.builder()
-                        .id(1L)
-                        .userId(testUserId)
-                        .summaryDate(testDate)
-                        .breakfastCalories(300.0)
-                        .breakfastProtein(20.0)
-                        .breakfastFat(10.0)
-                        .breakfastCarbohydrates(40.0)
-                        .build());
-
-        // when
-        dietService.addDiet(request1, testUserId);
-        dietService.addDiet(request2, testUserId);
-
-        // then
-        then(dietMapper).should(times(2)).insertDiet(any(Diet.class));
-        then(dietMapper).should().insertDietSummary(argThat(summary -> {
-            assertThat(summary).satisfies(s -> {
-                assertThat(s.getTotalCalories()).isCloseTo(300.0, within(0.001));
-                assertThat(s.getTotalProtein()).isCloseTo(20.0, within(0.001));
-                assertThat(s.getTotalFat()).isCloseTo(10.0, within(0.001));
-                assertThat(s.getTotalCarbohydrates()).isCloseTo(40.0, within(0.001));
-            });
-            return true;
-        }));
-        then(dietMapper).should().updateDietSummary(argThat(summary -> {
-            assertThat(summary).satisfies(s -> {
-                assertThat(s.getTotalCalories()).isCloseTo(800.0, within(0.001));
-                assertThat(s.getTotalProtein()).isCloseTo(50.0, within(0.001));
-                assertThat(s.getTotalFat()).isCloseTo(25.0, within(0.001));
-                assertThat(s.getTotalCarbohydrates()).isCloseTo(100.0, within(0.001));
-            });
-            return true;
-        }));
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 식단 수정 시 예외가 발생해야 함")
+    @DisplayName("존재하지 않는 식단 수정 시 예외 발생")
     void updateDiet_ShouldThrowException_WhenDietNotFound() {
         // given
-        DietAmountRequestDTO request = DietAmountRequestDTO.builder()
-                .dietId(999L)
-                .amount(100.0)
-                .build();
-
-        given(dietMapper.findDietById(999L)).willReturn(null);
+        Long dietId = 999L;
+        DietUpdateRequestDTO request = new DietUpdateRequestDTO();
+        given(dietMapper.findById(dietId)).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> dietService.updateDiet(request, testUserId))
-                .isInstanceOf(DietNotFoundException.class);
+        assertThatThrownBy(() -> dietService.updateDiet(dietId, request, testUserId))
+            .isInstanceOf(DietNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 식단 수정 시 예외 발생")
+    void updateDiet_ShouldThrowException_WhenNotOwner() {
+        // given
+        Long dietId = 1L;
+        Long otherUserId = 2L;
+        Diet diet = Diet.create(otherUserId, 1L, 100, "테스트", MealType.BREAKFAST, testDate, LocalTime.now());
+        DietUpdateRequestDTO request = new DietUpdateRequestDTO();
+
+        given(dietMapper.findById(dietId)).willReturn(Optional.of(diet));
+
+        // when & then
+        assertThatThrownBy(() -> dietService.updateDiet(dietId, request, testUserId))
+            .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    @DisplayName("식단 삭제")
+    void deleteDiet() {
+        // given
+        Long dietId = 1L;
+
+        // when
+        dietService.deleteDiet(dietId);
+
+        // then
+        verify(dietMapper).delete(eq(dietId));
+    }
+
+    @Test
+    @DisplayName("특정 날짜 식단 조회")
+    void getDietsByDate() {
+        // given
+        List<Diet> expectedDiets = Arrays.asList(
+            Diet.create(testUserId, 1L, 100, "테스트", MealType.BREAKFAST, testDate, LocalTime.now())
+        );
+        given(dietMapper.findByDate(eq(testUserId), eq(testDate))).willReturn(expectedDiets);
+
+        // when
+        List<Diet> actualDiets = dietService.getDietsByDate(testUserId, testDate);
+
+        // then
+        assertThat(actualDiets).hasSize(1);
+        assertThat(actualDiets).isEqualTo(expectedDiets);
     }
 }
