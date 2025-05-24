@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.balanceeat.demo.domain.diet.mapper.DietSummaryMapper">
+    
+    <select id="findByDateAndUserId" resultType="com.balanceeat.demo.domain.diet.entity.DietSummary">
+        SELECT * FROM diet_summary
+        WHERE summary_date = #{date} AND user_id = #{userId}
+    </select>
+    
+    <select id="findByDateRange" resultType="com.balanceeat.demo.domain.diet.entity.DietSummary">
+        SELECT * FROM diet_summary
+        WHERE user_id = #{userId}
+        AND summary_date BETWEEN #{start} AND #{end}
+        ORDER BY summary_date
+    </select>
+    
+    <insert id="insert" parameterType="com.balanceeat.demo.domain.diet.entity.DietSummary">
+        INSERT INTO diet_summary (
+            user_id, summary_date,
+            breakfast_calories, lunch_calories, dinner_calories,
+            snack_calories, night_calories,
+            total_calories, total_protein, total_fat, total_carbohydrates
+        ) VALUES (
+            #{userId}, #{summaryDate},
+            #{breakfastCalories}, #{lunchCalories}, #{dinnerCalories},
+            #{snackCalories}, #{nightCalories},
+            #{totalCalories}, #{totalProtein}, #{totalFat}, #{totalCarbohydrates}
+        )
+    </insert>
+    
+    <update id="update" parameterType="com.balanceeat.demo.domain.diet.entity.DietSummary">
+        UPDATE diet_summary
+        SET
+            breakfast_calories = #{breakfastCalories},
+            lunch_calories = #{lunchCalories},
+            dinner_calories = #{dinnerCalories},
+            snack_calories = #{snackCalories},
+            night_calories = #{nightCalories},
+            total_calories = #{totalCalories},
+            total_protein = #{totalProtein},
+            total_fat = #{totalFat},
+            total_carbohydrates = #{totalCarbohydrates}
+        WHERE id = #{id}
+    </update>
+</mapper> 
