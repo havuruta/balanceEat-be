@@ -2,25 +2,71 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.balanceeat.demo.domain.nutrition.mapper.NutritionMapper">
     <select id="selectById" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
-        SELECT id, name, calories, protein, carbohydrates, fat, description
+        SELECT id, name, calories, protein, carbohydrates, fat, category
         FROM nutrition
         WHERE id = #{id}
     </select>
 
     <select id="selectAll" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
-        SELECT id, name, calories, protein, carbohydrates, fat, description
+        SELECT id, name, calories, protein, carbohydrates, fat, category
         FROM nutrition
+        ORDER BY id
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM nutrition
     </select>
     
+    <select id="searchByCategory" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+        SELECT id, name, calories, protein, carbohydrates, fat, category
+        FROM nutrition
+        WHERE category = #{category}
+        ORDER BY id
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countByCategory" resultType="long">
+        SELECT COUNT(*)
+        FROM nutrition
+        WHERE category = #{category}
+    </select>
+
+    <select id="searchByName" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+        SELECT id, name, calories, protein, carbohydrates, fat, category
+        FROM nutrition
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+        ORDER BY id
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countByName" resultType="long">
+        SELECT COUNT(*)
+        FROM nutrition
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+    </select>
+
     <select id="searchByDescription" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
         SELECT id, name, calories, protein, carbohydrates, fat, description
         FROM nutrition
         WHERE description LIKE CONCAT('%', #{description}, '%')
+        ORDER BY id
+        LIMIT #{offset}, #{limit}
     </select>
 
-    <select id="searchByName" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+    <select id="countByDescription" resultType="long">
+        SELECT COUNT(*)
+        FROM nutrition
+        WHERE description LIKE CONCAT('%', #{description}, '%')
+    </select>
+
+    <select id="findByIds" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
         SELECT id, name, calories, protein, carbohydrates, fat, description
         FROM nutrition
-        WHERE name LIKE CONCAT('%', #{name}, '%')
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY id
     </select>
 </mapper> 
