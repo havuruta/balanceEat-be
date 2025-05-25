@@ -1,79 +1,117 @@
 package com.balanceeat.demo.domain.diet.entity;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
-@NoArgsConstructor
 public class DietSummary {
-    private Long id;
-    private Long userId;
-    private LocalDate summaryDate;
-    
-    private int breakfastCalories;
-    private int lunchCalories;
-    private int dinnerCalories;
-    private int snackCalories;
-    private int nightCalories;
-    
-    // 일일 총 영양 정보
-    private int totalCalories;
-    private int totalProtein;
-    private int totalFat;
-    private int totalCarbohydrates;
-    
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private final Long id;
+    private final Long userId;
+    private final LocalDate summaryDate;
+    private final double breakfastCalories;
+    private final double lunchCalories;
+    private final double dinnerCalories;
+    private final double snackCalories;
+    private final double nightCalories;
+    private final double totalCalories;
+    private final double totalProtein;
+    private final double totalFat;
+    private final double totalCarbohydrates;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
 
-    private java.util.List<Diet> breakfast;
-    private java.util.List<Diet> lunch;
-    private java.util.List<Diet> dinner;
-
-    public static DietSummary create(Long userId, LocalDate summaryDate) {
-        DietSummary summary = new DietSummary();
-        summary.userId = userId;
-        summary.summaryDate = summaryDate;
-        summary.breakfastCalories = 0;
-        summary.lunchCalories = 0;
-        summary.dinnerCalories = 0;
-        summary.snackCalories = 0;
-        summary.nightCalories = 0;
-        summary.totalCalories = 0;
-        summary.totalProtein = 0;
-        summary.totalFat = 0;
-        summary.totalCarbohydrates = 0;
-        return summary;
+    public DietSummary(Long id, Long userId, LocalDate summaryDate, 
+                      double breakfastCalories, double lunchCalories, double dinnerCalories,
+                      double snackCalories, double nightCalories, double totalCalories,
+                      double totalProtein, double totalFat, double totalCarbohydrates,
+                      LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.userId = userId;
+        this.summaryDate = summaryDate;
+        this.breakfastCalories = breakfastCalories;
+        this.lunchCalories = lunchCalories;
+        this.dinnerCalories = dinnerCalories;
+        this.snackCalories = snackCalories;
+        this.nightCalories = nightCalories;
+        this.totalCalories = totalCalories;
+        this.totalProtein = totalProtein;
+        this.totalFat = totalFat;
+        this.totalCarbohydrates = totalCarbohydrates;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public void updateCalories(int breakfast, int lunch, int dinner, 
-                             int snack, int night, int total) {
-        this.breakfastCalories = breakfast;
-        this.lunchCalories = lunch;
-        this.dinnerCalories = dinner;
-        this.snackCalories = snack;
-        this.nightCalories = night;
-        this.totalCalories = total;
+    public DietSummary withId(Long id) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
     }
 
-    public void updateNutrition(int protein, int fat, int carbs) {
-        this.totalProtein = protein;
-        this.totalFat = fat;
-        this.totalCarbohydrates = carbs;
+    public DietSummary withUpdatedAt(LocalDateTime updatedAt) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
     }
 
-    public java.util.List<Diet> getBreakfast() { return breakfast; }
-    public java.util.List<Diet> getLunch() { return lunch; }
-    public java.util.List<Diet> getDinner() { return dinner; }
-    public int getBreakfastProtein() { return 0; }
-    public int getBreakfastFat() { return 0; }
-    public int getBreakfastCarbohydrates() { return 0; }
-    public int getLunchProtein() { return 0; }
-    public int getLunchFat() { return 0; }
-    public int getLunchCarbohydrates() { return 0; }
-    public int getDinnerProtein() { return 0; }
-    public int getDinnerFat() { return 0; }
-    public int getDinnerCarbohydrates() { return 0; }
-} 
+    public DietSummary withCreatedAt(LocalDateTime createdAt) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
+    }
+
+    public DietSummary withBreakfastCalories(double breakfastCalories) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
+    }
+
+    public DietSummary withLunchCalories(double lunchCalories) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
+    }
+
+    public DietSummary withDinnerCalories(double dinnerCalories) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
+    }
+
+    public DietSummary withSnackCalories(double snackCalories) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
+    }
+
+    public DietSummary withNightCalories(double nightCalories) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
+    }
+
+    public DietSummary withTotalCalories(double totalCalories) {
+        return new DietSummary(id, userId, summaryDate, 
+                             breakfastCalories, lunchCalories, dinnerCalories,
+                             snackCalories, nightCalories, totalCalories,
+                             totalProtein, totalFat, totalCarbohydrates,
+                             createdAt, updatedAt);
+    }
+}

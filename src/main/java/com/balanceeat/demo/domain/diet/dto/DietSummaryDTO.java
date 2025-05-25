@@ -1,6 +1,7 @@
 package com.balanceeat.demo.domain.diet.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
 import lombok.Builder;
@@ -14,6 +15,8 @@ import com.balanceeat.demo.domain.diet.entity.Diet;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DietSummaryDTO {
+    private Long id;
+    private Long userId;
     private LocalDate summaryDate;
     
     // 아침 식사 정보
@@ -37,11 +40,20 @@ public class DietSummaryDTO {
     private int dinnerFat;
     private int dinnerCarbohydrates;
     
+    // 간식 영양 정보
+    private double snackCalories;
+    
+    // 야식 영양 정보
+    private double nightCalories;
+    
     // 일일 총 영양 정보
-    private int totalCalories;
+    private double totalCalories;
     private int totalProtein;
     private int totalFat;
     private int totalCarbohydrates;
+    
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     public static DietSummaryDTO fromEntity(DietSummary entity) {
         if (entity == null) {

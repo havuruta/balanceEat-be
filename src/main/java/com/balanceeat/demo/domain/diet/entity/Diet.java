@@ -1,5 +1,7 @@
 package com.balanceeat.demo.domain.diet.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -7,7 +9,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Diet {
     private Long id;
     private Long userId;
