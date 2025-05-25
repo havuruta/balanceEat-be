@@ -4,18 +4,20 @@
     <insert id="insertDiet" parameterType="com.balanceeat.demo.domain.diet.entity.Diet">
         INSERT INTO diets (
             user_id,
+            nutrition_id,
             diet_date,
             meal_type,
-            food_name,
+            meal_time,
             amount,
             note,
             created_at,
             updated_at
         ) VALUES (
             #{userId},
+            #{nutritionId},
             #{dietDate},
             #{mealType},
-            #{foodName},
+            #{mealTime},
             #{amount},
             #{note},
             NOW(),
@@ -27,14 +29,15 @@
         WITH DietSummaries AS (
             SELECT 
                 d.diet_date as summaryDate,
-                SUM(CASE WHEN d.meal_type = 'BREAKFAST' THEN d.calories ELSE 0 END) as breakfastCalories,
-                SUM(CASE WHEN d.meal_type = 'LUNCH' THEN d.calories ELSE 0 END) as lunchCalories,
-                SUM(CASE WHEN d.meal_type = 'DINNER' THEN d.calories ELSE 0 END) as dinnerCalories,
-                SUM(d.calories) as totalCalories,
-                SUM(d.protein) as totalProtein,
-                SUM(d.fat) as totalFat,
-                SUM(d.carbohydrates) as totalCarbohydrates
+                SUM(CASE WHEN d.meal_type = 'BREAKFAST' THEN n.calories * d.amount ELSE 0 END) as breakfastCalories,
+                SUM(CASE WHEN d.meal_type = 'LUNCH' THEN n.calories * d.amount ELSE 0 END) as lunchCalories,
+                SUM(CASE WHEN d.meal_type = 'DINNER' THEN n.calories * d.amount ELSE 0 END) as dinnerCalories,
+                SUM(n.calories * d.amount) as totalCalories,
+                SUM(n.protein * d.amount) as totalProtein,
+                SUM(n.fat * d.amount) as totalFat,
+                SUM(n.carbohydrates * d.amount) as totalCarbohydrates
             FROM diets d
+            JOIN nutrition n ON d.nutrition_id = n.id
             WHERE d.user_id = #{userId}
             AND d.diet_date BETWEEN #{start} AND #{end}
             GROUP BY d.diet_date
@@ -45,13 +48,10 @@
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'id', d.id,
-                        'foodName', d.food_name,
+                        'nutritionId', d.nutrition_id,
                         'amount', d.amount,
-                        'calories', d.calories,
-                        'protein', d.protein,
-                        'fat', d.fat,
-                        'carbohydrates', d.carbohydrates,
-                        'note', d.note
+                        'note', d.note,
+                        'mealTime', d.meal_time
                     )
                 ) as breakfast
             FROM diets d
@@ -66,13 +66,10 @@
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'id', d.id,
-                        'foodName', d.food_name,
+                        'nutritionId', d.nutrition_id,
                         'amount', d.amount,
-                        'calories', d.calories,
-                        'protein', d.protein,
-                        'fat', d.fat,
-                        'carbohydrates', d.carbohydrates,
-                        'note', d.note
+                        'note', d.note,
+                        'mealTime', d.meal_time
                     )
                 ) as lunch
             FROM diets d
@@ -87,13 +84,10 @@
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'id', d.id,
-                        'foodName', d.food_name,
+                        'nutritionId', d.nutrition_id,
                         'amount', d.amount,
-                        'calories', d.calories,
-                        'protein', d.protein,
-                        'fat', d.fat,
-                        'carbohydrates', d.carbohydrates,
-                        'note', d.note
+                        'note', d.note,
+                        'mealTime', d.meal_time
                     )
                 ) as dinner
             FROM diets d
@@ -118,6 +112,9 @@
         UPDATE diets
         SET
             amount = #{amount},
+            note = #{note},
+            meal_type = #{mealType},
+            meal_time = #{mealTime},
             updated_at = NOW()
         WHERE id = #{id}
     </update>
@@ -130,14 +127,11 @@
         SELECT 
             id,
             user_id as userId,
+            nutrition_id as nutritionId,
             diet_date as dietDate,
             meal_type as mealType,
-            food_name as foodName,
+            meal_time as mealTime,
             amount,
-            calories,
-            protein,
-            fat,
-            carbohydrates,
             note,
             created_at as createdAt,
             updated_at as updatedAt
@@ -146,4 +140,31 @@
         AND diet_date = #{date}
         ORDER BY meal_type, id
     </select>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO diets (
+            user_id,
+            nutrition_id,
+            diet_date,
+            meal_type,
+            meal_time,
+            amount,
+            note,
+            created_at,
+            updated_at
+        ) VALUES 
+        <foreach collection="list" item="diet" separator=",">
+            (
+                #{diet.userId},
+                #{diet.nutritionId},
+                #{diet.dietDate},
+                #{diet.mealType},
+                #{diet.mealTime},
+                #{diet.amount},
+                #{diet.note},
+                NOW(),
+                NOW()
+            )
+        </foreach>
+    </insert>
 </mapper> 

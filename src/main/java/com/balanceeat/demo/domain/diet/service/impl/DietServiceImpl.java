@@ -1,27 +1,30 @@
 package com.balanceeat.demo.domain.diet.service.impl;
 
-import com.balanceeat.demo.domain.diet.dto.DietAddRequestDTO;
-import com.balanceeat.demo.domain.diet.dto.DietUpdateRequestDTO;
-import com.balanceeat.demo.domain.diet.entity.Diet;
-import com.balanceeat.demo.domain.diet.entity.DietSummary;
-import com.balanceeat.demo.domain.diet.entity.MealType;
-import com.balanceeat.demo.domain.diet.mapper.DietMapper;
-import com.balanceeat.demo.domain.diet.mapper.DietSummaryMapper;
-import com.balanceeat.demo.domain.diet.service.DietService;
-import com.balanceeat.demo.domain.nutrition.entity.Nutrition;
-import com.balanceeat.demo.domain.nutrition.mapper.NutritionMapper;
-import com.balanceeat.demo.global.exception.DietNotFoundException;
-import com.balanceeat.demo.global.exception.UnauthorizedException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.balanceeat.demo.domain.diet.dto.DietAddRequestDTO;
+import com.balanceeat.demo.domain.diet.dto.DietUpdateRequestDTO;
+import com.balanceeat.demo.domain.diet.dto.DietSummaryDTO;
+import com.balanceeat.demo.domain.diet.entity.Diet;
+import com.balanceeat.demo.domain.diet.entity.DietSummary;
+import com.balanceeat.demo.domain.diet.entity.MealType;
+import com.balanceeat.demo.domain.diet.mapper.DietMapper;
+import com.balanceeat.demo.domain.diet.service.DietService;
+import com.balanceeat.demo.domain.diet.service.DietSummaryService;
+import com.balanceeat.demo.domain.nutrition.entity.Nutrition;
+import com.balanceeat.demo.domain.nutrition.mapper.NutritionMapper;
+import com.balanceeat.demo.global.exception.DietNotFoundException;
+import com.balanceeat.demo.global.exception.UnauthorizedException;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -30,7 +33,7 @@ import java.util.stream.Collectors;
 public class DietServiceImpl implements DietService {
 
     private final DietMapper dietMapper;
-    private final DietSummaryMapper dietSummaryMapper;
+    private final DietSummaryService dietSummaryService;
     private final NutritionMapper nutritionMapper;
 
     @Override
@@ -62,11 +65,6 @@ public class DietServiceImpl implements DietService {
         
         // 3. DietSummary 업데이트
         LocalDate summaryDate = LocalDate.parse(request.getDiets().get(0).getDietDate());
-        DietSummary summary = dietSummaryMapper.findByDateAndUserId(summaryDate, userId);
-        
-        if (summary == null) {
-            summary = DietSummary.create(userId, summaryDate);
-        }
         
         // 식사 타입별 칼로리 계산
         Map<MealType, Integer> mealTypeCalories = diets.stream()
@@ -86,49 +84,12 @@ public class DietServiceImpl implements DietService {
             })
             .sum();
         
-        int totalProtein = diets.stream()
-            .mapToInt(diet -> {
-                Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
-                return (int)(nutrition.getProtein() * diet.getAmount() / 100);
-            })
-            .sum();
-        
-        int totalFat = diets.stream()
-            .mapToInt(diet -> {
-                Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
-                return (int)(nutrition.getFat() * diet.getAmount() / 100);
-            })
-            .sum();
-        
-        int totalCarbs = diets.stream()
-            .mapToInt(diet -> {
-                Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
-                return (int)(nutrition.getCarbohydrates() * diet.getAmount() / 100);
-            })
-            .sum();
-        
-        summary.updateCalories(
-            mealTypeCalories.getOrDefault(MealType.BREAKFAST, 0),
-            mealTypeCalories.getOrDefault(MealType.LUNCH, 0),
-            mealTypeCalories.getOrDefault(MealType.DINNER, 0),
-            mealTypeCalories.getOrDefault(MealType.SNACK, 0),
-            mealTypeCalories.getOrDefault(MealType.NIGHT, 0),
-            totalCalories
-        );
-        
-        summary.updateNutrition(totalProtein, totalFat, totalCarbs);
-        
-        if (summary.getId() == null) {
-            dietSummaryMapper.insert(summary);
-        } else {
-            dietSummaryMapper.update(summary);
-        }
+        dietSummaryService.updateSummary(userId, summaryDate, mealTypeCalories, totalCalories);
     }
 
     @Override
-    public List<DietSummary> getDietSummariesByDateRange(Long userId, LocalDate start, LocalDate end) {
-        log.debug("식단 요약 조회: 사용자 ID={}, 기간={} ~ {}", userId, start, end);
-        return dietSummaryMapper.findByDateRange(userId, start, end);
+    public List<DietSummaryDTO> getDietSummariesByDateRange(Long userId, LocalDate start, LocalDate end) {
+        return dietSummaryService.getSummariesByDateRange(userId, start, end);
     }
 
     @Override

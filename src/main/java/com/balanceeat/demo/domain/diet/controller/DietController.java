@@ -6,6 +6,9 @@ import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,12 +20,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import com.balanceeat.demo.domain.auth.UserPrincipal;
 import com.balanceeat.demo.domain.diet.entity.Diet;
 import com.balanceeat.demo.domain.diet.entity.DietSummary;
 import com.balanceeat.demo.domain.diet.service.DietService;
 import com.balanceeat.demo.domain.diet.dto.DietSummaryDTO;
+import com.balanceeat.demo.domain.diet.dto.DietAddRequestDTO;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,37 +48,17 @@ public class DietController {
     public ResponseEntity<List<DietSummaryDTO>> getDietSummaries(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDate start,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDate end,
-            HttpSession session) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         
-        // 세션에서 사용자 ID 가져오기
-        Map<String, String> userInfo = (Map<String, String>) session.getAttribute("user");
-        if (userInfo == null || userInfo.get("id") == null) {
-            log.warn("로그인되지 않은 사용자가 식단 요약을 요청했습니다.");
-            return ResponseEntity.ok().body(List.of());
-        }
-        Long userId = Long.parseLong(userInfo.get("id"));
-        
-        log.info("식단 요약 조회: 사용자 ID={}, 기간={} ~ {}", userId, start, end);
-        
-        List<DietSummary> summaries = dietService.getDietSummariesByDateRange(userId, start, end);
-        List<DietSummaryDTO> dtos = summaries.stream()
-                .map(DietSummaryDTO::fromEntity)
-                .toList();
-        
-        return ResponseEntity.ok().body(dtos);
+        List<DietSummaryDTO> summaries = dietService.getDietSummariesByDateRange(userPrincipal.getId(), start, end);
+        return ResponseEntity.ok().body(summaries);
     }
     
     @PostMapping("/add")
     @ResponseBody
-    public ResponseEntity<?> addDiet(@RequestBody Map<String, Object> dietData, HttpSession session) {
+    public ResponseEntity<?> addDiet(@RequestBody Map<String, Object> dietData,
+        @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            // 세션에서 사용자 ID 가져오기
-            Map<String, String> userInfo = (Map<String, String>) session.getAttribute("user");
-            if (userInfo == null || userInfo.get("id") == null) {
-                return ResponseEntity.status(401).body("로그인이 필요합니다.");
-            }
-            Long userId = Long.parseLong(userInfo.get("id"));
-            
             // 식단 데이터 생성
             Diet diet = new Diet();
             // 식단 추가
@@ -86,17 +70,35 @@ public class DietController {
         }
     }
 
+    @PostMapping("/batch-add")
+    @ResponseBody
+    public ResponseEntity<?> batchAddDiets(@RequestBody DietAddRequestDTO request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        try {
+            log.info("식단 일괄 추가 요청 수신: {}", request);
+            Long userId = userPrincipal.getId();
+            
+            dietService.batchAddDiets(request, userId);
+            return ResponseEntity.ok().body("식단이 일괄 추가되었습니다.");
+        } catch (Exception e) {
+            log.error("식단 일괄 추가 중 오류 발생", e);
+            return ResponseEntity.badRequest().body("식단 일괄 추가 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
     @PutMapping("/update/{id}")
     @ResponseBody
-    public ResponseEntity<?> updateDiet(@PathVariable Long id, @RequestBody Map<String, Object> dietData, HttpSession session) {
+    public ResponseEntity<?> updateDiet(@PathVariable Long id, @RequestBody Map<String, Object> dietData) {
         try {
             log.info("식단 수정 요청 수신: ID={}, 데이터={}", id, dietData);
             
-            Map<String, String> userInfo = (Map<String, String>) session.getAttribute("user");
-            if (userInfo == null || userInfo.get("id") == null) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)) {
                 log.warn("로그인되지 않은 사용자가 식단 수정을 시도했습니다.");
                 return ResponseEntity.status(401).body("로그인이 필요합니다.");
             }
+            
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            Long userId = userPrincipal.getId();
             
             Diet diet = new Diet();
             
@@ -111,14 +113,15 @@ public class DietController {
     @GetMapping("/list")
     @ResponseBody
     public ResponseEntity<List<Diet>> getDietsByDate(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-            HttpSession session) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
         try {
-            Map<String, String> userInfo = (Map<String, String>) session.getAttribute("user");
-            if (userInfo == null || userInfo.get("id") == null) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)) {
                 return ResponseEntity.status(401).body(null);
             }
-            Long userId = Long.parseLong(userInfo.get("id"));
+            
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            Long userId = userPrincipal.getId();
             
             List<Diet> diets = dietService.getDietsByDate(userId, date);
             return ResponseEntity.ok().body(diets);
@@ -129,12 +132,15 @@ public class DietController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseBody
-    public ResponseEntity<String> deleteDiet(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<String> deleteDiet(@PathVariable Long id) {
         try {
-            Map<String, String> userInfo = (Map<String, String>) session.getAttribute("user");
-            if (userInfo == null || userInfo.get("id") == null) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)) {
                 return ResponseEntity.status(401).body("로그인이 필요합니다.");
             }
+            
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            Long userId = userPrincipal.getId();
             
             dietService.deleteDiet(id);
             return ResponseEntity.ok().body("식단이 삭제되었습니다.");
@@ -146,14 +152,15 @@ public class DietController {
     @GetMapping("/edit")
     @ResponseBody
     public ResponseEntity<List<Diet>> getDietsForEdit(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-            HttpSession session) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
         try {
-            Map<String, String> userInfo = (Map<String, String>) session.getAttribute("user");
-            if (userInfo == null || userInfo.get("id") == null) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)) {
                 return ResponseEntity.status(401).body(null);
             }
-            Long userId = Long.parseLong(userInfo.get("id"));
+            
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            Long userId = userPrincipal.getId();
             
             log.info("식단 조회 요청: 날짜={}, 사용자 ID={}", date, userId);
             List<Diet> diets = dietService.getDietsByDate(userId, date);
