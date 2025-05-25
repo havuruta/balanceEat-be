@@ -28,6 +28,10 @@ public class DietSummary {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private java.util.List<Diet> breakfast;
+    private java.util.List<Diet> lunch;
+    private java.util.List<Diet> dinner;
+
     public static DietSummary create(Long userId, LocalDate summaryDate) {
         DietSummary summary = new DietSummary();
         summary.userId = userId;
@@ -59,4 +63,17 @@ public class DietSummary {
         this.totalFat = fat;
         this.totalCarbohydrates = carbs;
     }
+
+    public java.util.List<Diet> getBreakfast() { return breakfast; }
+    public java.util.List<Diet> getLunch() { return lunch; }
+    public java.util.List<Diet> getDinner() { return dinner; }
+    public int getBreakfastProtein() { return 0; }
+    public int getBreakfastFat() { return 0; }
+    public int getBreakfastCarbohydrates() { return 0; }
+    public int getLunchProtein() { return 0; }
+    public int getLunchFat() { return 0; }
+    public int getLunchCarbohydrates() { return 0; }
+    public int getDinnerProtein() { return 0; }
+    public int getDinnerFat() { return 0; }
+    public int getDinnerCarbohydrates() { return 0; }
 } 

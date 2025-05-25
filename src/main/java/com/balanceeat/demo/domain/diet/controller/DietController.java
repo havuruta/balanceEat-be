@@ -77,18 +77,6 @@ public class DietController {
             
             // 식단 데이터 생성
             Diet diet = new Diet();
-            diet.setUserId(userId);
-            diet.setDietDate(LocalDate.parse((String) dietData.get("dietDate")));
-            diet.setMealType((String) dietData.get("mealType"));
-            diet.setFoodName((String) dietData.get("foodName"));
-            diet.setAmount(Double.parseDouble(dietData.get("amount").toString()));
-            diet.setCalories(Double.parseDouble(dietData.get("calories").toString()));
-            diet.setProtein(Double.parseDouble(dietData.get("protein").toString()));
-            diet.setFat(Double.parseDouble(dietData.get("fat").toString()));
-            diet.setCarbohydrates(Double.parseDouble(dietData.get("carbohydrates").toString()));
-            diet.setNote((String) dietData.get("note"));
-            
-            
             // 식단 추가
             dietService.addDiet(diet);
             
@@ -111,11 +99,8 @@ public class DietController {
             }
             
             Diet diet = new Diet();
-            diet.setId(id);
-            diet.setAmount(Double.parseDouble(dietData.get("amount").toString()));
             
             log.info("수정할 식단 정보: {}", diet);
-            dietService.updateDiet(diet);
             return ResponseEntity.ok().body("식단이 수정되었습니다.");
         } catch (Exception e) {
             log.error("식단 수정 중 오류 발생", e);

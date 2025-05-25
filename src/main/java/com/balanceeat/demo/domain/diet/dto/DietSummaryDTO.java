@@ -48,32 +48,7 @@ public class DietSummaryDTO {
             return null;
         }
         
-        return DietSummaryDTO.builder()
-                .summaryDate(entity.getSummaryDate())
-                // 아침 식사
-                .breakfast(entity.getBreakfast())
-                .breakfastCalories(roundToInt(entity.getBreakfastCalories()))
-                .breakfastProtein(roundToInt(entity.getBreakfastProtein()))
-                .breakfastFat(roundToInt(entity.getBreakfastFat()))
-                .breakfastCarbohydrates(roundToInt(entity.getBreakfastCarbohydrates()))
-                // 점심 식사
-                .lunch(entity.getLunch())
-                .lunchCalories(roundToInt(entity.getLunchCalories()))
-                .lunchProtein(roundToInt(entity.getLunchProtein()))
-                .lunchFat(roundToInt(entity.getLunchFat()))
-                .lunchCarbohydrates(roundToInt(entity.getLunchCarbohydrates()))
-                // 저녁 식사
-                .dinner(entity.getDinner())
-                .dinnerCalories(roundToInt(entity.getDinnerCalories()))
-                .dinnerProtein(roundToInt(entity.getDinnerProtein()))
-                .dinnerFat(roundToInt(entity.getDinnerFat()))
-                .dinnerCarbohydrates(roundToInt(entity.getDinnerCarbohydrates()))
-                // 일일 총합
-                .totalCalories(roundToInt(entity.getTotalCalories()))
-                .totalProtein(roundToInt(entity.getTotalProtein()))
-                .totalFat(roundToInt(entity.getTotalFat()))
-                .totalCarbohydrates(roundToInt(entity.getTotalCarbohydrates()))
-                .build();
+       return DietSummaryDTO.builder().build();
     }
     
     private static int roundToInt(Double value) {

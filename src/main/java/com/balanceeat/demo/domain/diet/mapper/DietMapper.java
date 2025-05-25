@@ -2,6 +2,7 @@ package com.balanceeat.demo.domain.diet.mapper;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.ibatis.annotations.Mapper;
 
@@ -15,4 +16,10 @@ public interface DietMapper {
     void updateDiet(Diet diet);
     void deleteDiet(Long id);
     List<Diet> findDietsByDate(Long userId, LocalDate date);
+    void batchInsert(List<Diet> diets);
+    void insert(Diet diet);
+    void update(Diet diet);
+    Optional<Diet> findById(Long id);
+    List<Diet> findByDate(Long userId, java.time.LocalDate date);
+    void delete(Long id);
 } 
