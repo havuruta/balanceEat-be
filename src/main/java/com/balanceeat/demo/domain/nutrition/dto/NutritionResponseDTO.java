@@ -23,7 +23,7 @@ public class NutritionResponseDTO {
                 .protein(nutrition.getProtein())
                 .fat(nutrition.getFat())
                 .carbohydrates(nutrition.getCarbohydrates())
-                .category(nutrition.getCategory().getLabel())
+                .category(nutrition.getCategory() != null ? nutrition.getCategory().getLabel() : null)
                 .build();
     }
 } 

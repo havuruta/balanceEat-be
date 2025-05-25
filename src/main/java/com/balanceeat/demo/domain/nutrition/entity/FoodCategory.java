@@ -39,7 +39,7 @@ public enum FoodCategory {
 	
 	public static FoodCategory fromLabel(String label) {
 		for (FoodCategory category : values()) {
-			if (category.label.equals(label)) {
+			if (category.getLabel().equals(label)) {
 				return category;
 			}
 		}

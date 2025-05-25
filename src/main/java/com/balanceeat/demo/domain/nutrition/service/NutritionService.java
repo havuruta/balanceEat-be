@@ -8,4 +8,7 @@ public interface NutritionService {
     Nutrition getNutritionById(Long id);
     PageResponseDTO<NutritionResponseDTO> getAllNutritions(int page, int size);
     PageResponseDTO<NutritionResponseDTO> searchNutritions(String name, String category, int page, int size);
+    // NutritionDTO createNutrition(NutritionDTO nutritionDTO);
+    // NutritionDTO updateNutrition(Long id, NutritionDTO nutritionDTO);
+    // void deleteNutrition(Long id);
 } 
