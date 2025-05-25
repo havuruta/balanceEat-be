@@ -1,13 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.balanceeat.demo.domain.nutrition.mapper.NutritionMapper">
-    <select id="selectById" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+    <resultMap id="NutritionResultMap" type="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="calories" column="calories"/>
+        <result property="protein" column="protein"/>
+        <result property="carbohydrates" column="carbohydrates"/>
+        <result property="fat" column="fat"/>
+        <result property="category" column="category" typeHandler="com.balanceeat.demo.domain.nutrition.entity.FoodCategoryTypeHandler"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="NutritionResultMap">
         SELECT id, name, calories, protein, carbohydrates, fat, category
         FROM nutrition
         WHERE id = #{id}
     </select>
 
-    <select id="selectAll" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+    <select id="selectAll" resultMap="NutritionResultMap">
         SELECT id, name, calories, protein, carbohydrates, fat, category
         FROM nutrition
         ORDER BY id
@@ -18,7 +28,7 @@
         SELECT COUNT(*) FROM nutrition
     </select>
     
-    <select id="searchByCategory" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+    <select id="searchByCategory" resultMap="NutritionResultMap">
         SELECT id, name, calories, protein, carbohydrates, fat, category
         FROM nutrition
         WHERE category = #{category}
@@ -32,7 +42,7 @@
         WHERE category = #{category}
     </select>
 
-    <select id="searchByName" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
+    <select id="searchByName" resultMap="NutritionResultMap">
         SELECT id, name, calories, protein, carbohydrates, fat, category
         FROM nutrition
         WHERE name LIKE CONCAT('%', #{name}, '%')
@@ -46,22 +56,8 @@
         WHERE name LIKE CONCAT('%', #{name}, '%')
     </select>
 
-    <select id="searchByDescription" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
-        SELECT id, name, calories, protein, carbohydrates, fat, description
-        FROM nutrition
-        WHERE description LIKE CONCAT('%', #{description}, '%')
-        ORDER BY id
-        LIMIT #{offset}, #{limit}
-    </select>
-
-    <select id="countByDescription" resultType="long">
-        SELECT COUNT(*)
-        FROM nutrition
-        WHERE description LIKE CONCAT('%', #{description}, '%')
-    </select>
-
-    <select id="findByIds" resultType="com.balanceeat.demo.domain.nutrition.entity.Nutrition">
-        SELECT id, name, calories, protein, carbohydrates, fat, description
+    <select id="findByIds" resultMap="NutritionResultMap">
+        SELECT id, name, calories, protein, carbohydrates, fat, category
         FROM nutrition
         WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
