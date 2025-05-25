@@ -7,6 +7,8 @@ create table diet_summaries
     breakfast_calories      double default 0 not null,
     lunch_calories          double default 0 not null,
     dinner_calories         double default 0 not null,
+    snack_calories          double default 0 not null,
+    night_calories          double default 0 not null,
     total_calories          double default 0 not null,
     total_protein           double default 0 not null,
     total_fat               double default 0 not null,

@@ -30,31 +30,26 @@ CREATE TABLE IF NOT EXISTS diet_summaries (
     summary_date DATE NOT NULL,
     
     -- 아침 식사 영양 정보
-    breakfast_calories DOUBLE NOT NULL DEFAULT 0,
-    breakfast_protein DOUBLE NOT NULL DEFAULT 0,
-    breakfast_fat DOUBLE NOT NULL DEFAULT 0,
-    breakfast_carbohydrates DOUBLE NOT NULL DEFAULT 0,
+    breakfast_calories DOUBLE DEFAULT 0,
     
     -- 점심 식사 영양 정보
-    lunch_calories DOUBLE NOT NULL DEFAULT 0,
-    lunch_protein DOUBLE NOT NULL DEFAULT 0,
-    lunch_fat DOUBLE NOT NULL DEFAULT 0,
-    lunch_carbohydrates DOUBLE NOT NULL DEFAULT 0,
+    lunch_calories DOUBLE DEFAULT 0,
     
     -- 저녁 식사 영양 정보
-    dinner_calories DOUBLE NOT NULL DEFAULT 0,
-    dinner_protein DOUBLE NOT NULL DEFAULT 0,
-    dinner_fat DOUBLE NOT NULL DEFAULT 0,
-    dinner_carbohydrates DOUBLE NOT NULL DEFAULT 0,
+    dinner_calories DOUBLE DEFAULT 0,
+    
+    -- 간식 영양 정보
+    snack_calories DOUBLE DEFAULT 0,
+    
+    -- 야식 영양 정보
+    night_calories DOUBLE DEFAULT 0,
     
     -- 일일 총 영양 정보
-    total_calories DOUBLE NOT NULL DEFAULT 0,
-    total_protein DOUBLE NOT NULL DEFAULT 0,
-    total_fat DOUBLE NOT NULL DEFAULT 0,
-    total_carbohydrates DOUBLE NOT NULL DEFAULT 0,
+    total_calories DOUBLE DEFAULT 0,
     
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (user_id) REFERENCES users(id),
-    UNIQUE KEY uk_user_date (user_id, summary_date)
+    UNIQUE KEY unique_user_date (user_id, summary_date)
 ); 
