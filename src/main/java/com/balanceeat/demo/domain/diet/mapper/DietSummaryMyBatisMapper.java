@@ -8,9 +8,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Mapper
-public interface DietSummaryMapper {
-    DietSummary findByDateAndUserId(@Param("date") LocalDate date, @Param("userId") Long userId);
+public interface DietSummaryMyBatisMapper {
     List<DietSummary> findByDateRange(@Param("userId") Long userId, @Param("start") LocalDate start, @Param("end") LocalDate end);
+    DietSummary findByDateAndUserId(@Param("date") LocalDate date, @Param("userId") Long userId);
     void insert(DietSummary summary);
     void update(DietSummary summary);
 } 
