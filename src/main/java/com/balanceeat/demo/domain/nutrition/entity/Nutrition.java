@@ -14,4 +14,5 @@ public class Nutrition {
 	private Double carbohydrates;
 	private Double fat;
 	private String description;
+	private FoodCategory category;
 }

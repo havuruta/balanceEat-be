@@ -33,7 +33,6 @@ public class NutritionController {
     public ResponseEntity<PageResponseDTO<NutritionResponseDTO>> getAllNutritions(
             @Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기") @RequestParam(defaultValue = "10") int size) {
-        logger.info("영양 정보 목록 조회 요청 - 페이지: {}, 크기: {}", page, size);
         PageResponseDTO<NutritionResponseDTO> response = nutritionService.getAllNutritions(page, size);
         return ResponseEntity.ok(response);
     }
@@ -49,7 +48,6 @@ public class NutritionController {
             @Parameter(description = "카테고리") @RequestParam(required = false) String category,
             @Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기") @RequestParam(defaultValue = "10") int size) {
-        logger.info("영양 정보 검색 요청 - 이름: {}, 카테고리: {}, 페이지: {}, 크기: {}", name, category, page, size);
         PageResponseDTO<NutritionResponseDTO> response = nutritionService.searchNutritions(name, category, page, size);
         return ResponseEntity.ok(response);
     }
