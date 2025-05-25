@@ -46,8 +46,6 @@ public class DietSummaryServiceImpl implements DietSummaryService {
             dietSummaryMyBatisMapper.insert(newSummary);
         } else {
             log.debug("기존 식단 요약 업데이트");
-            existingSummary = existingSummary.withUpdatedAt(LocalDateTime.now());
-            
             // 기존 값 유지하면서 새로운 값만 더하기
             for (MealType mealType : MealType.values()) {
                 int newCalories = mealTypeCalories.getOrDefault(mealType, 0);
@@ -112,9 +110,7 @@ public class DietSummaryServiceImpl implements DietSummaryService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        DietSummary newSummary = dietSummaryConverter.toEntity(dto)
-            .withCreatedAt(now)
-            .withUpdatedAt(now);
+        DietSummary newSummary = dietSummaryConverter.toEntity(dto);
         dietSummaryMyBatisMapper.insert(newSummary);
         return dietSummaryConverter.toDTO(newSummary);
     }
@@ -137,16 +133,13 @@ public class DietSummaryServiceImpl implements DietSummaryService {
                 .withDinnerCalories(dto.getDinnerCalories())
                 .withSnackCalories(dto.getSnackCalories())
                 .withNightCalories(dto.getNightCalories())
-                .withTotalCalories(dto.getTotalCalories())
-                .withUpdatedAt(now);
+                .withTotalCalories(dto.getTotalCalories());
 
             dietSummaryMyBatisMapper.update(updatedSummary);
             return dietSummaryConverter.toDTO(updatedSummary);
         } else {
             log.debug("새로운 식단 요약 생성");
-            DietSummary newSummary = dietSummaryConverter.toEntity(dto)
-                .withCreatedAt(now)
-                .withUpdatedAt(now);
+            DietSummary newSummary = dietSummaryConverter.toEntity(dto);
             dietSummaryMyBatisMapper.insert(newSummary);
             return dietSummaryConverter.toDTO(newSummary);
         }

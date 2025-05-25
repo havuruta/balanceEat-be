@@ -2,19 +2,90 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.balanceeat.demo.domain.diet.mapper.DietSummaryMyBatisMapper">
     
-    <select id="findByDateAndUserId" resultType="com.balanceeat.demo.domain.diet.entity.DietSummary">
-        SELECT *
-        FROM diet_summaries
-        WHERE summary_date = #{date}
-        AND user_id = #{userId}
+    <resultMap id="dietSummaryResultMap" type="com.balanceeat.demo.domain.diet.entity.DietSummary">
+        <id property="id" column="id"/>
+        <result property="userId" column="userId"/>
+        <result property="summaryDate" column="summaryDate"/>
+        <result property="breakfastCalories" column="breakfastCalories"/>
+        <result property="lunchCalories" column="lunchCalories"/>
+        <result property="dinnerCalories" column="dinnerCalories"/>
+        <result property="snackCalories" column="snackCalories"/>
+        <result property="nightCalories" column="nightCalories"/>
+        <result property="totalCalories" column="totalCalories"/>
+        <result property="totalProtein" column="totalProtein"/>
+        <result property="totalFat" column="totalFat"/>
+        <result property="totalCarbohydrates" column="totalCarbohydrates"/>
+    </resultMap>
+    
+    <select id="findByDateAndUserId" resultMap="dietSummaryResultMap">
+        WITH DietSummaries AS (
+            SELECT 
+                d.diet_date as summaryDate,
+                SUM(CASE WHEN d.meal_type = 'BREAKFAST' THEN n.calories * d.amount / 100 ELSE 0 END) as breakfastCalories,
+                SUM(CASE WHEN d.meal_type = 'LUNCH' THEN n.calories * d.amount / 100 ELSE 0 END) as lunchCalories,
+                SUM(CASE WHEN d.meal_type = 'DINNER' THEN n.calories * d.amount / 100 ELSE 0 END) as dinnerCalories,
+                SUM(CASE WHEN d.meal_type = 'SNACK' THEN n.calories * d.amount / 100 ELSE 0 END) as snackCalories,
+                SUM(CASE WHEN d.meal_type = 'NIGHT' THEN n.calories * d.amount / 100 ELSE 0 END) as nightCalories,
+                SUM(n.calories * d.amount / 100) as totalCalories,
+                SUM(n.protein * d.amount / 100) as totalProtein,
+                SUM(n.fat * d.amount / 100) as totalFat,
+                SUM(n.carbohydrates * d.amount / 100) as totalCarbohydrates
+            FROM diets d
+            JOIN nutrition n ON d.nutrition_id = n.id
+            WHERE d.user_id = #{userId}
+            AND d.diet_date = #{date}
+            GROUP BY d.diet_date
+        )
+        SELECT 
+            NULL as id,
+            #{userId} as userId,
+            summaryDate,
+            breakfastCalories,
+            lunchCalories,
+            dinnerCalories,
+            snackCalories,
+            nightCalories,
+            totalCalories,
+            totalProtein,
+            totalFat,
+            totalCarbohydrates
+        FROM DietSummaries
     </select>
 
-    <select id="findByDateRange" resultType="com.balanceeat.demo.domain.diet.entity.DietSummary">
-        SELECT *
-        FROM diet_summaries
-        WHERE user_id = #{userId}
-        AND summary_date BETWEEN #{startDate} AND #{endDate}
-        ORDER BY summary_date DESC
+    <select id="findByDateRange" resultMap="dietSummaryResultMap">
+        WITH DietSummaries AS (
+            SELECT 
+                d.diet_date as summaryDate,
+                SUM(CASE WHEN d.meal_type = 'BREAKFAST' THEN n.calories * d.amount / 100 ELSE 0 END) as breakfastCalories,
+                SUM(CASE WHEN d.meal_type = 'LUNCH' THEN n.calories * d.amount / 100 ELSE 0 END) as lunchCalories,
+                SUM(CASE WHEN d.meal_type = 'DINNER' THEN n.calories * d.amount / 100 ELSE 0 END) as dinnerCalories,
+                SUM(CASE WHEN d.meal_type = 'SNACK' THEN n.calories * d.amount / 100 ELSE 0 END) as snackCalories,
+                SUM(CASE WHEN d.meal_type = 'NIGHT' THEN n.calories * d.amount / 100 ELSE 0 END) as nightCalories,
+                SUM(n.calories * d.amount / 100) as totalCalories,
+                SUM(n.protein * d.amount / 100) as totalProtein,
+                SUM(n.fat * d.amount / 100) as totalFat,
+                SUM(n.carbohydrates * d.amount / 100) as totalCarbohydrates
+            FROM diets d
+            JOIN nutrition n ON d.nutrition_id = n.id
+            WHERE d.user_id = #{userId}
+            AND d.diet_date BETWEEN #{start} AND #{end}
+            GROUP BY d.diet_date
+        )
+        SELECT 
+            NULL as id,
+            #{userId} as userId,
+            summaryDate,
+            breakfastCalories,
+            lunchCalories,
+            dinnerCalories,
+            snackCalories,
+            nightCalories,
+            totalCalories,
+            totalProtein,
+            totalFat,
+            totalCarbohydrates
+        FROM DietSummaries
+        ORDER BY summaryDate
     </select>
 
     <insert id="insert" parameterType="com.balanceeat.demo.domain.diet.entity.DietSummary">

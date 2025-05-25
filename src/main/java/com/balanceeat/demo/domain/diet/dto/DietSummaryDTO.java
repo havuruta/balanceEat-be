@@ -19,48 +19,32 @@ public class DietSummaryDTO {
     private Long userId;
     private LocalDate summaryDate;
     
-    // 아침 식사 정보
-    private List<Diet> breakfast;
     private int breakfastCalories;
-    private int breakfastProtein;
-    private int breakfastFat;
-    private int breakfastCarbohydrates;
-    
-    // 점심 식사 정보
-    private List<Diet> lunch;
     private int lunchCalories;
-    private int lunchProtein;
-    private int lunchFat;
-    private int lunchCarbohydrates;
-    
-    // 저녁 식사 정보
-    private List<Diet> dinner;
     private int dinnerCalories;
-    private int dinnerProtein;
-    private int dinnerFat;
-    private int dinnerCarbohydrates;
-    
-    // 간식 영양 정보
     private double snackCalories;
-    
-    // 야식 영양 정보
     private double nightCalories;
-    
-    // 일일 총 영양 정보
     private double totalCalories;
-    private int totalProtein;
-    private int totalFat;
-    private int totalCarbohydrates;
-    
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private double totalProtein;
+    private double totalFat;
+    private double totalCarbohydrates;
     
     public static DietSummaryDTO fromEntity(DietSummary entity) {
         if (entity == null) {
             return null;
         }
         
-       return DietSummaryDTO.builder().build();
+        return DietSummaryDTO.builder()
+            .id(entity.getId())
+            .userId(entity.getUserId())
+            .summaryDate(entity.getSummaryDate())
+            .breakfastCalories((int) entity.getBreakfastCalories())
+            .lunchCalories((int) entity.getLunchCalories())
+            .dinnerCalories((int) entity.getDinnerCalories())
+            .snackCalories(entity.getSnackCalories())
+            .nightCalories(entity.getNightCalories())
+            .totalCalories(entity.getTotalCalories())
+            .build();
     }
     
     private static int roundToInt(Double value) {
