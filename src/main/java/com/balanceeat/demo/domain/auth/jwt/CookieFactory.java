@@ -1,24 +1,52 @@
 package com.balanceeat.demo.domain.auth.jwt;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * TODO: 프로필별 설정
+ * 1. application-dev.yml: 개발 환경 설정
+ *    - spring.profiles.active: dev
+ *    - secure: false (HTTP 허용)
+ * 
+ * 2. application-prod.yml: 운영 환경 설정
+ *    - spring.profiles.active: prod
+ *    - secure: true (HTTPS만 허용)
+ * 
+ * 3. 배포 시 application-prod.yml 설정 필요
+ */
 @Component
 public class CookieFactory {
 
     private static final String SAME_SITE_ATTRIBUTE = "SameSite";
-    private static final String SAME_SITE_VALUE = "None";
+    private static final String SAME_SITE_NONE = "None";
+    private static final String SAME_SITE_LAX = "Lax";
     private static final String PATH_VALUE = "/";
+
+    @Value("${spring.profiles.active:prod}")
+    private String activeProfile;
+
+    @Value("${server.servlet.context-path:}")
+    private String contextPath;
+
+    private boolean isSecure() {
+        return !"dev".equals(activeProfile);
+    }
+
+    private String getSameSiteValue() {
+        return isSecure() ? SAME_SITE_NONE : SAME_SITE_LAX;
+    }
 
     public void addAccessCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from(TokenProvider.ACCESS_TOKEN_COOKIE_NAME, token)
                 .httpOnly(true)
-                .secure(true)
-                .path(PATH_VALUE)
-                .sameSite(SAME_SITE_VALUE)
+                .secure(isSecure())
+                .path("/")
+                .sameSite(getSameSiteValue())
                 .maxAge(TokenProvider.ACCESS_TOKEN_EXPIRE_TIME / 1000)
                 .build();
         
@@ -28,9 +56,9 @@ public class CookieFactory {
     public void addRefreshCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from(TokenProvider.REFRESH_TOKEN_COOKIE_NAME, token)
                 .httpOnly(true)
-                .secure(true)
-                .path(PATH_VALUE)
-                .sameSite(SAME_SITE_VALUE)
+                .secure(isSecure())
+                .path("/")
+                .sameSite(getSameSiteValue())
                 .maxAge(TokenProvider.REFRESH_TOKEN_EXPIRE_TIME / 1000)
                 .build();
         
@@ -40,17 +68,17 @@ public class CookieFactory {
     public void clearCookies(HttpServletResponse response) {
         ResponseCookie accessCookie = ResponseCookie.from(TokenProvider.ACCESS_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(true)
-                .path(PATH_VALUE)
-                .sameSite(SAME_SITE_VALUE)
+                .secure(isSecure())
+                .path(contextPath + PATH_VALUE)
+                .sameSite(getSameSiteValue())
                 .maxAge(0)
                 .build();
         
         ResponseCookie refreshCookie = ResponseCookie.from(TokenProvider.REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(true)
-                .path(PATH_VALUE)
-                .sameSite(SAME_SITE_VALUE)
+                .secure(isSecure())
+                .path(contextPath + PATH_VALUE)
+                .sameSite(getSameSiteValue())
                 .maxAge(0)
                 .build();
         
@@ -65,11 +93,11 @@ public class CookieFactory {
      */
     public void expireCookie(HttpServletResponse response, String cookieName) {
         ResponseCookie cookie = ResponseCookie.from(cookieName, "")
-                .path("/")
+                .path(contextPath + PATH_VALUE)
                 .maxAge(0)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
+                .secure(isSecure())
+                .sameSite(getSameSiteValue())
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }

@@ -39,7 +39,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Console;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
+
+import io.jsonwebtoken.Claims;
 
 @Slf4j
 @Service
@@ -116,9 +119,9 @@ public class AuthServiceImpl implements AuthService {
             TokenDTO.Response tokens = tokenProvider.generateToken(authentication);
             
             // 5. 리프레시 토큰 갱신
-            refreshTokenRepository.deleteByKey(authentication.getName());
+            refreshTokenRepository.deleteByKey(userPrincipal.getEmail());
             refreshTokenRepository.save(
-                authentication.getName(), tokens.getRefreshToken(),
+                userPrincipal.getEmail(), tokens.getRefreshToken(),
                 tokenProvider.getRefreshTokenExpirationTime());
             
             // 6. 쿠키 설정
@@ -171,36 +174,66 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public TokenDTO.Response reissue(HttpServletRequest request, HttpServletResponse response) {
-        // 1. 쿠키에서 토큰 추출
-        String accessToken = null;
+        // 1. 쿠키에서 refresh 토큰 추출
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
+        log.info("reissue 요청의 모든 쿠키: {}", Arrays.toString(cookies));
+        
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (TokenProvider.ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
-                    accessToken = cookie.getValue();
-                }
+                log.info("쿠키 검사 - 이름: {}, 값: {}", cookie.getName(), cookie.getValue());
                 if (TokenProvider.REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
+                    log.info("리프레시 토큰 추출 성공: {}", refreshToken);
+                    break;
                 }
             }
         }
         
-        if (accessToken == null || refreshToken == null) {
+        if (refreshToken == null) {
+            log.warn("리프레시 토큰이 없습니다.");
             throw new InvalidTokenException();
         }
         
         // 2. 리프레시 토큰 유효성 검증
         validateRefreshToken(refreshToken);
         
-        // 3. 인증 정보 조회
-        Authentication authentication = tokenProvider.getAuthentication(accessToken, request);
+        // 3. 리프레시 토큰에서 사용자 정보 추출
+        Claims claims = tokenProvider.parseClaims(refreshToken);
+        String email = claims.getSubject();
+        log.info("리프레시 토큰에서 추출한 이메일: {}", email);
         
-        // 4. 저장된 리프레시 토큰 조회
-        String storedRefreshToken = getRefreshToken(authentication.getName());
+        if (email == null) {
+            log.warn("리프레시 토큰에서 이메일을 추출할 수 없습니다.");
+            throw new InvalidTokenException();
+        }
         
-        // 5. 토큰 일치 여부 검증
-        validateTokenMatch(storedRefreshToken, refreshToken);
+        // 4. Redis에서 저장된 토큰 조회 및 검증
+        String storedToken = refreshTokenRepository.findByKey(email)
+            .map(RefreshToken::getValue)
+            .orElse(null);
+            
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            log.warn("Redis에 저장된 토큰과 일치하지 않습니다. email: {}, storedToken: {}, providedToken: {}", 
+                email, storedToken, refreshToken);
+            throw new InvalidTokenException();
+        }
+        
+        // 5. 사용자 정보로 인증 객체 생성
+        User user = userMapper.findByEmail(email)
+            .orElseThrow(() -> {
+                log.error("사용자를 찾을 수 없습니다. email: {}", email);
+                return new UserNotFoundException();
+            });
+            
+        if (!user.isActive()) {
+            log.warn("비활성화된 사용자입니다. email: {}", email);
+            throw new BusinessException(ErrorMessage.USER_ACCOUNT_DISABLED, HttpStatus.BAD_REQUEST);
+        }
+        
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            userPrincipal, null, userPrincipal.getAuthorities());
         
         // 6. 새로운 토큰 생성
         TokenDTO.Response tokenResponse = tokenProvider.generateToken(authentication);
@@ -216,6 +249,7 @@ public class AuthServiceImpl implements AuthService {
         cookieFactory.addAccessCookie(response, tokenResponse.getAccessToken());
         cookieFactory.addRefreshCookie(response, tokenResponse.getRefreshToken());
         
+        log.info("토큰 재발급 성공. email: {}", email);
         return tokenResponse;
     }
     

@@ -107,6 +107,7 @@ public class TokenProvider {
         log.debug("Refresh Token 만료 시간: {}", refreshTokenExpiresIn);
 
         String refreshToken = Jwts.builder()
+            .setSubject(userPrincipal.getEmail())
             .setExpiration(refreshTokenExpiresIn)
             .signWith(key, SignatureAlgorithm.HS512)
             .compact();
@@ -182,7 +183,7 @@ public class TokenProvider {
     }
 
     // 6. 토큰 클레임 파싱 메서드
-    private Claims parseClaims(String accessToken) {
+    public Claims parseClaims(String accessToken) {
         log.debug("토큰 파싱 시작 - Access Token: {}", accessToken);
         try {
             Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
