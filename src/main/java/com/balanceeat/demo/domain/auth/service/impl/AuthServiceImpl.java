@@ -38,9 +38,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Console;
-import java.util.NoSuchElementException;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -168,73 +165,55 @@ public class AuthServiceImpl implements AuthService {
         cookieFactory.expireAllCookies(response);
     }
     
-    @Transactional
     @Override
-    public TokenDTO.Response reissue(HttpServletRequest request, HttpServletResponse response) {
-        // 1. 쿠키에서 토큰 추출
-        String accessToken = null;
+    @Transactional
+    public void reissue(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("토큰 재발급 시작");
+        
+        // 1. 쿠키에서 리프레시 토큰 추출
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (TokenProvider.ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
-                    accessToken = cookie.getValue();
-                }
                 if (TokenProvider.REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
+                    break;
                 }
             }
         }
         
-        if (accessToken == null || refreshToken == null) {
+        if (refreshToken == null) {
+            log.warn("리프레시 토큰이 없습니다");
             throw new InvalidTokenException();
         }
         
-        // 2. 리프레시 토큰 유효성 검증
-        validateRefreshToken(refreshToken);
+        // 2. 리프레시 토큰 검증
+        if (!tokenProvider.validateToken(refreshToken)) {
+            log.warn("유효하지 않은 리프레시 토큰입니다");
+            throw new InvalidTokenException();
+        }
         
-        // 3. 인증 정보 조회
-        Authentication authentication = tokenProvider.getAuthentication(accessToken, request);
+        // 3. Redis에서 리프레시 토큰 확인
+        RefreshToken storedToken = refreshTokenRepository.findByKey(refreshToken)
+            .orElseThrow(InvalidTokenException::new);
         
-        // 4. 저장된 리프레시 토큰 조회
-        String storedRefreshToken = getRefreshToken(authentication.getName());
+        // 4. 새로운 토큰 생성
+        Authentication authentication = tokenProvider.getAuthentication(refreshToken, request);
+        TokenDTO.Response tokens = tokenProvider.generateToken(authentication);
         
-        // 5. 토큰 일치 여부 검증
-        validateTokenMatch(storedRefreshToken, refreshToken);
-        
-        // 6. 새로운 토큰 생성
-        TokenDTO.Response tokenResponse = tokenProvider.generateToken(authentication);
-        
-        // 7. 리프레시 토큰 업데이트
+        // 5. Redis에 새로운 리프레시 토큰 저장
+        refreshTokenRepository.deleteByKey(refreshToken);
         refreshTokenRepository.save(
             authentication.getName(),
-            tokenResponse.getRefreshToken(),
+            tokens.getRefreshToken(),
             tokenProvider.getRefreshTokenExpirationTime()
         );
         
-        // 8. 새로운 쿠키 설정
-        cookieFactory.addAccessCookie(response, tokenResponse.getAccessToken());
-        cookieFactory.addRefreshCookie(response, tokenResponse.getRefreshToken());
+        // 6. 새로운 토큰을 쿠키에 설정
+        cookieFactory.addAccessCookie(response, tokens.getAccessToken());
+        cookieFactory.addRefreshCookie(response, tokens.getRefreshToken());
         
-        return tokenResponse;
-    }
-    
-    private void validateRefreshToken(String refreshToken) {
-        if (!tokenProvider.validateToken(refreshToken)) {
-            throw new InvalidTokenException();
-        }
-    }
-    
-    private String getRefreshToken(String memberId) {
-        return refreshTokenRepository.findByKey(memberId)
-            .map(RefreshToken::getValue)
-            .orElseThrow(() -> new NoSuchElementException(ErrorMessage.USER_ALREADY_LOGOUT));
-    }
-    
-    private void validateTokenMatch(String storedToken, String providedToken) {
-        if (!storedToken.equals(providedToken)) {
-            throw new InvalidTokenException();
-        }
+        log.debug("토큰 재발급 완료");
     }
 }
 
