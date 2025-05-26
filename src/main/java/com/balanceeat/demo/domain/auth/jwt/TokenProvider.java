@@ -36,6 +36,9 @@ public class TokenProvider {
     public static final String AUTHORITIES_KEY = "auth";
     public static final String USER_ID = "id";
     public static final String USER_EMAIL = "email";
+    public static final String TOKEN_TYPE = "type";
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
     public static final String BEARER_TYPE = "Bearer";
     public static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
@@ -82,18 +85,19 @@ public class TokenProvider {
         log.debug("UserPrincipal 정보 - ID: {}, Email: {}", userPrincipal.getId(), userPrincipal.getEmail());
 
         // 3-3. JWT 클레임 설정
-        Claims claims = Jwts.claims();
-        log.debug("새로운 Claims 객체 생성");
+        Claims accessClaims = Jwts.claims();
+        log.debug("새로운 Access Claims 객체 생성");
 
-        claims.put(AUTHORITIES_KEY, authorities);
-        claims.put(USER_ID, userPrincipal.getId());
-        claims.put(USER_EMAIL, userPrincipal.getEmail());
-        claims.setSubject(userPrincipal.getEmail());
-        log.debug("Claims 설정 완료: {}", claims);
+        accessClaims.put(AUTHORITIES_KEY, authorities);
+        accessClaims.put(USER_ID, userPrincipal.getId());
+        accessClaims.put(USER_EMAIL, userPrincipal.getEmail());
+        accessClaims.put(TOKEN_TYPE, TOKEN_TYPE_ACCESS);
+        accessClaims.setSubject(userPrincipal.getEmail());
+        log.debug("Access Claims 설정 완료: {}", accessClaims);
 
         // 3-4. 액세스 토큰 서명
         String accessToken = Jwts.builder()
-            .setClaims(claims)
+            .setClaims(accessClaims)
             .setExpiration(accessTokenExpiresIn)
             .signWith(key, SignatureAlgorithm.HS512)
             .compact();
@@ -106,8 +110,15 @@ public class TokenProvider {
         Date refreshTokenExpiresIn = new Date(now + REFRESH_TOKEN_EXPIRE_TIME);
         log.debug("Refresh Token 만료 시간: {}", refreshTokenExpiresIn);
 
+        Claims refreshClaims = Jwts.claims();
+        refreshClaims.put(USER_ID, userPrincipal.getId());
+        refreshClaims.put(USER_EMAIL, userPrincipal.getEmail());
+        refreshClaims.put(TOKEN_TYPE, TOKEN_TYPE_REFRESH);
+        refreshClaims.setSubject(userPrincipal.getEmail());
+        log.debug("Refresh Claims 설정 완료: {}", refreshClaims);
+
         String refreshToken = Jwts.builder()
-            .setSubject(userPrincipal.getEmail())
+            .setClaims(refreshClaims)
             .setExpiration(refreshTokenExpiresIn)
             .signWith(key, SignatureAlgorithm.HS512)
             .compact();
@@ -183,15 +194,18 @@ public class TokenProvider {
     }
 
     // 6. 토큰 클레임 파싱 메서드
-    public Claims parseClaims(String accessToken) {
-        log.debug("토큰 파싱 시작 - Access Token: {}", accessToken);
+    public Claims parseClaims(String token) {
+        log.debug("토큰 파싱 시작 - Token: {}", token);
         try {
-            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
             log.debug("파싱된 Claims: {}", claims);
             return claims;
         } catch (ExpiredJwtException e) {
             log.error("만료된 토큰 파싱 - Claims: {}", e.getClaims());
             return e.getClaims();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("토큰 파싱 실패: {}", e.getMessage());
+            throw new InvalidTokenException();
         }
     }
 

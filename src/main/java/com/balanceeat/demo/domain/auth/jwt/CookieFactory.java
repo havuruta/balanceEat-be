@@ -42,6 +42,9 @@ public class CookieFactory {
     }
 
     public void addAccessCookie(HttpServletResponse response, String token) {
+        // 기존 쿠키 삭제
+        expireCookie(response, TokenProvider.ACCESS_TOKEN_COOKIE_NAME);
+        
         ResponseCookie cookie = ResponseCookie.from(TokenProvider.ACCESS_TOKEN_COOKIE_NAME, token)
                 .httpOnly(true)
                 .secure(isSecure())
@@ -54,6 +57,10 @@ public class CookieFactory {
     }
 
     public void addRefreshCookie(HttpServletResponse response, String token) {
+        // 기존 쿠키 삭제
+        expireCookie(response, TokenProvider.REFRESH_TOKEN_COOKIE_NAME);
+        
+        // 새로운 쿠키 설정
         ResponseCookie cookie = ResponseCookie.from(TokenProvider.REFRESH_TOKEN_COOKIE_NAME, token)
                 .httpOnly(true)
                 .secure(isSecure())

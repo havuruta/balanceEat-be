@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,22 +27,18 @@ import com.balanceeat.demo.domain.diet.entity.DietSummary;
 import com.balanceeat.demo.domain.diet.service.DietService;
 import com.balanceeat.demo.domain.diet.dto.DietSummaryDTO;
 import com.balanceeat.demo.domain.diet.dto.DietAddRequestDTO;
+import com.balanceeat.demo.domain.diet.dto.DietDetailResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
-@RequestMapping("/diet")
+@RequestMapping("/api/diet")
 @RequiredArgsConstructor
 public class DietController {
 
     private final DietService dietService;
-
-    @GetMapping("/calendar")
-    public String calendarPage() {
-        return "diet/calendar";
-    }
 
     @GetMapping("/summaries")
     @ResponseBody
@@ -171,5 +168,15 @@ public class DietController {
             log.error("식단 조회 중 오류 발생", e);
             return ResponseEntity.badRequest().body(null);
         }
+    }
+
+    @GetMapping("/detail")
+    @ResponseBody
+    public ResponseEntity<DietDetailResponse> getDietDetail(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        DietDetailResponse response = dietService.getDietDetailByDate(date, userPrincipal.getId());
+        return ResponseEntity.ok(response);
     }
 } 

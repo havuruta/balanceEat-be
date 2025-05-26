@@ -200,7 +200,7 @@ public class AuthServiceImpl implements AuthService {
         
         // 3. 리프레시 토큰에서 사용자 정보 추출
         Claims claims = tokenProvider.parseClaims(refreshToken);
-        String email = claims.getSubject();
+        String email = claims.get(TokenProvider.USER_EMAIL, String.class);
         log.info("리프레시 토큰에서 추출한 이메일: {}", email);
         
         if (email == null) {
@@ -213,7 +213,17 @@ public class AuthServiceImpl implements AuthService {
             .map(RefreshToken::getValue)
             .orElse(null);
             
-        if (storedToken == null || !storedToken.equals(refreshToken)) {
+        if (storedToken == null) {
+            log.warn("Redis에 저장된 토큰이 없습니다. email: {}", email);
+            throw new InvalidTokenException();
+        }
+        
+        // 토큰의 클레임을 비교
+        Claims storedClaims = tokenProvider.parseClaims(storedToken);
+        Claims providedClaims = tokenProvider.parseClaims(refreshToken);
+        
+        if (!storedClaims.get(TokenProvider.USER_EMAIL).equals(providedClaims.get(TokenProvider.USER_EMAIL)) ||
+            !storedClaims.get(TokenProvider.USER_ID).equals(providedClaims.get(TokenProvider.USER_ID))) {
             log.warn("Redis에 저장된 토큰과 일치하지 않습니다. email: {}, storedToken: {}, providedToken: {}", 
                 email, storedToken, refreshToken);
             throw new InvalidTokenException();
@@ -255,8 +265,11 @@ public class AuthServiceImpl implements AuthService {
     
     private void validateRefreshToken(String refreshToken) {
         if (!tokenProvider.validateToken(refreshToken)) {
+            log.warn("리프레시 토큰이 유효하지 않습니다.");
             throw new InvalidTokenException();
         }
+
+        Claims claims = tokenProvider.parseClaims(refreshToken);
     }
     
     private String getRefreshToken(String memberId) {
