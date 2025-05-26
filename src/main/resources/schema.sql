@@ -45,5 +45,15 @@ CREATE TABLE IF NOT EXISTS diets (
     note VARCHAR(255),
     meal_type VARCHAR(20) NOT NULL,
     diet_date DATE NOT NULL,
-    meal_time TIME NOT NULL,
-); 
+    meal_time TIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS daily_diet_scores (
+    user_id BIGINT NOT NULL,
+    date DATE NOT NULL,
+    score INTEGER NOT NULL,
+    feedback VARCHAR(40) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, date),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
