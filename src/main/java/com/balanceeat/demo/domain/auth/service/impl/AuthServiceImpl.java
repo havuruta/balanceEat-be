@@ -38,7 +38,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Console;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
@@ -171,10 +170,12 @@ public class AuthServiceImpl implements AuthService {
         cookieFactory.expireAllCookies(response);
     }
     
-    @Transactional
     @Override
+    @Transactional
     public void reissue(HttpServletRequest request, HttpServletResponse response) {
-        // 1. 쿠키에서 refresh 토큰 추출
+        log.debug("토큰 재발급 시작");
+        
+        // 1. 쿠키에서 리프레시 토큰 추출
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
         log.info("reissue 요청의 모든 쿠키: {}", Arrays.toString(cookies));
@@ -252,9 +253,10 @@ public class AuthServiceImpl implements AuthService {
         TokenDTO.Response tokenResponse = tokenProvider.generateToken(authentication);
         
         // 8. 새로운 리프레시 토큰 저장
+
         refreshTokenRepository.save(
             authentication.getName(),
-            tokenResponse.getRefreshToken(),
+            tokens.getRefreshToken(),
             tokenProvider.getRefreshTokenExpirationTime()
         );
         
