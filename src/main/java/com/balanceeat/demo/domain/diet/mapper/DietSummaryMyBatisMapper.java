@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface DietSummaryMyBatisMapper {
@@ -13,4 +14,5 @@ public interface DietSummaryMyBatisMapper {
     DietSummary findByDateAndUserId(@Param("date") LocalDate date, @Param("userId") Long userId);
     void insert(DietSummary summary);
     void update(DietSummary summary);
+    Optional<DietSummary> findByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 } 
