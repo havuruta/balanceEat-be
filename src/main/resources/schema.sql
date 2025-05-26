@@ -6,24 +6,6 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS diets (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    diet_date DATE NOT NULL,
-    meal_type VARCHAR(20) NOT NULL, -- BREAKFAST, LUNCH, DINNER
-    food_name VARCHAR(100) NOT NULL,
-    amount DOUBLE NOT NULL, -- g 단위
-    calories DOUBLE NOT NULL,
-    protein DOUBLE NOT NULL,
-    fat DOUBLE NOT NULL,
-    carbohydrates DOUBLE NOT NULL,
-    note TEXT,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    INDEX idx_user_date (user_id, diet_date)
-);
-
 CREATE TABLE IF NOT EXISTS diet_summaries (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -52,4 +34,16 @@ CREATE TABLE IF NOT EXISTS diet_summaries (
     
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE KEY unique_user_date (user_id, summary_date)
+);
+
+CREATE TABLE IF NOT EXISTS diets (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    nutrition_id BIGINT NOT NULL,
+    food_name VARCHAR(100) NOT NULL,
+    amount INTEGER NOT NULL,
+    note VARCHAR(255),
+    meal_type VARCHAR(20) NOT NULL,
+    diet_date DATE NOT NULL,
+    meal_time TIME NOT NULL,
 ); 

@@ -4,17 +4,12 @@ create table diets
         primary key,
     user_id       bigint       not null,
     nutrition_id  bigint       not null,
+    food_name     VARCHAR(100) not null,
     diet_date     date         not null,
     meal_type     varchar(20)  not null,
     meal_time     time         not null,
     amount        int          not null,
-    note          text         null,
-    created_at    timestamp    not null,
-    updated_at    timestamp    not null,
-    constraint diets_ibfk_1
-        foreign key (user_id) references users (id),
-    constraint diets_ibfk_2
-        foreign key (nutrition_id) references nutrition (id)
+    note          text         null
 );
 
 create index idx_user_date
