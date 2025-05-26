@@ -136,13 +136,13 @@ public class DietServiceImpl implements DietService {
         if (!diet.isOwner(userId)) {
             throw new UnauthorizedException("식단을 수정할 권한이 없습니다.");
         }
-        
-        diet.update(
-            request.getAmount(),
-            request.getNote(),
-            request.getMealType(),
-            LocalTime.parse(request.getMealTime())
-        );
+
+        // null-safe: 값이 없으면 기존 값 유지
+        Integer amount = request.getAmount() != null ? request.getAmount() : diet.getAmount();
+        String note = request.getNote() != null ? request.getNote() : diet.getNote();
+        MealType mealType = request.getMealType() != null ? request.getMealType() : diet.getMealType();
+
+        diet.update(amount);
         
         dietMapper.update(diet);
         log.info("식단 수정 완료");
@@ -186,6 +186,24 @@ public class DietServiceImpl implements DietService {
                     .build())
                 .collect(Collectors.toList()))
             .dinner(dietsByMealType.getOrDefault(MealType.DINNER, Collections.emptyList())
+                .stream()
+                .map(diet -> DietDTO.builder()
+                    .id(diet.getId())
+                    .foodName(diet.getFoodName())
+                    .amount(diet.getAmount())
+                    .mealType(diet.getMealType())
+                    .build())
+                .collect(Collectors.toList()))
+            .snack(dietsByMealType.getOrDefault(MealType.SNACK, Collections.emptyList())
+                .stream()
+                .map(diet -> DietDTO.builder()
+                    .id(diet.getId())
+                    .foodName(diet.getFoodName())
+                    .amount(diet.getAmount())
+                    .mealType(diet.getMealType())
+                    .build())
+                .collect(Collectors.toList()))
+            .night(dietsByMealType.getOrDefault(MealType.NIGHT, Collections.emptyList())
                 .stream()
                 .map(diet -> DietDTO.builder()
                     .id(diet.getId())
