@@ -2,6 +2,7 @@ package com.balanceeat.demo.domain.diet.service.impl;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.balanceeat.demo.domain.diet.dto.DietAddRequestDTO;
-import com.balanceeat.demo.domain.diet.dto.DietUpdateRequestDTO;
+import com.balanceeat.demo.domain.diet.dto.DietDTO;
+import com.balanceeat.demo.domain.diet.dto.DietDetailResponse;
 import com.balanceeat.demo.domain.diet.dto.DietSummaryDTO;
+import com.balanceeat.demo.domain.diet.dto.DietUpdateRequestDTO;
 import com.balanceeat.demo.domain.diet.entity.Diet;
 import com.balanceeat.demo.domain.diet.entity.DietSummary;
 import com.balanceeat.demo.domain.diet.entity.MealType;
@@ -50,15 +53,19 @@ public class DietServiceImpl implements DietService {
         
         // 2. 식단 저장
         List<Diet> diets = request.getDiets().stream()
-            .map(dto -> Diet.create(
-                userId,
-                dto.getNutritionId(),
-                Integer.parseInt(dto.getAmount()),
-                dto.getNote(),
-                dto.getMealType(),
-                LocalDate.parse(dto.getDietDate()),
-                dto.getMealTime()
-            ))
+            .map(dto -> {
+                Nutrition nutrition = nutritionMap.get(dto.getNutritionId());
+                return Diet.create(
+                    userId,
+                    dto.getNutritionId(),
+                    dto.getFoodName(),
+                    Integer.parseInt(dto.getAmount()),
+                    dto.getNote(),
+                    dto.getMealType(),
+                    LocalDate.parse(dto.getDietDate()),
+                    dto.getMealTime()
+                );
+            })
             .collect(Collectors.toList());
         
         dietMapper.batchInsert(diets);
@@ -84,7 +91,29 @@ public class DietServiceImpl implements DietService {
             })
             .sum();
         
-        dietSummaryService.updateSummary(userId, summaryDate, mealTypeCalories, totalCalories);
+        double totalProtein = diets.stream()
+            .mapToDouble(diet -> {
+                Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
+                return nutrition.getProtein() * diet.getAmount() / 100;
+            })
+            .sum();
+        
+        double totalFat = diets.stream()
+            .mapToDouble(diet -> {
+                Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
+                return nutrition.getFat() * diet.getAmount() / 100;
+            })
+            .sum();
+        
+        double totalCarbohydrates = diets.stream()
+            .mapToDouble(diet -> {
+                Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
+                return nutrition.getCarbohydrates() * diet.getAmount() / 100;
+            })
+            .sum();
+        
+        dietSummaryService.updateSummary(userId, summaryDate, mealTypeCalories, totalCalories, 
+            totalProtein, totalFat, totalCarbohydrates);
     }
 
     @Override
@@ -127,5 +156,47 @@ public class DietServiceImpl implements DietService {
     @Override
     public List<Diet> getDietsByDate(Long userId, LocalDate date) {
         return dietMapper.findByDate(userId, date);
+    }
+
+    @Override
+    public DietDetailResponse getDietDetailByDate(LocalDate date, Long userId) {
+        List<Diet> diets = dietMapper.findByDate(userId, date);
+        DietSummary summary = dietSummaryService.getSummaryByDate(userId, date);
+        
+        Map<MealType, List<Diet>> dietsByMealType = diets.stream()
+            .collect(Collectors.groupingBy(Diet::getMealType));
+        
+        return DietDetailResponse.builder()
+            .breakfast(dietsByMealType.getOrDefault(MealType.BREAKFAST, Collections.emptyList())
+                .stream()
+                .map(diet -> DietDTO.builder()
+                    .id(diet.getId())
+                    .foodName(diet.getFoodName())
+                    .amount(diet.getAmount())
+                    .mealType(diet.getMealType())
+                    .build())
+                .collect(Collectors.toList()))
+            .lunch(dietsByMealType.getOrDefault(MealType.LUNCH, Collections.emptyList())
+                .stream()
+                .map(diet -> DietDTO.builder()
+                    .id(diet.getId())
+                    .foodName(diet.getFoodName())
+                    .amount(diet.getAmount())
+                    .mealType(diet.getMealType())
+                    .build())
+                .collect(Collectors.toList()))
+            .dinner(dietsByMealType.getOrDefault(MealType.DINNER, Collections.emptyList())
+                .stream()
+                .map(diet -> DietDTO.builder()
+                    .id(diet.getId())
+                    .foodName(diet.getFoodName())
+                    .amount(diet.getAmount())
+                    .mealType(diet.getMealType())
+                    .build())
+                .collect(Collectors.toList()))
+            .totalProtein(summary.getTotalProtein())
+            .totalFat(summary.getTotalFat())
+            .totalCarbohydrates(summary.getTotalCarbohydrates())
+            .build();
     }
 } 

@@ -26,60 +26,27 @@ public class DietSummaryServiceImpl implements DietSummaryService {
     private final DietSummaryConverter dietSummaryConverter;
 
     @Override
-    public void updateSummary(Long userId, LocalDate date, Map<MealType, Integer> mealTypeCalories, int totalCalories) {
-        log.debug("식단 요약 업데이트 요청: 사용자 ID={}, 날짜={}", userId, date);
-        DietSummary existingSummary = dietSummaryMyBatisMapper.findByDateAndUserId(date, userId);
+    public void updateSummary(Long userId, LocalDate date, Map<MealType, Integer> mealTypeCalories, 
+                             int totalCalories, double totalProtein, double totalFat, double totalCarbohydrates) {
+        DietSummary summary = dietSummaryMyBatisMapper.findByUserIdAndDate(userId, date)
+            .orElse(DietSummary.create(userId, date));
         
-        if (existingSummary == null) {
-            log.debug("새로운 식단 요약 생성");
-            DietSummaryDTO dto = new DietSummaryDTO();
-            dto.setUserId(userId);
-            dto.setSummaryDate(date);
-            dto.setBreakfastCalories(mealTypeCalories.getOrDefault(MealType.BREAKFAST, 0));
-            dto.setLunchCalories(mealTypeCalories.getOrDefault(MealType.LUNCH, 0));
-            dto.setDinnerCalories(mealTypeCalories.getOrDefault(MealType.DINNER, 0));
-            dto.setSnackCalories(mealTypeCalories.getOrDefault(MealType.SNACK, 0));
-            dto.setNightCalories(mealTypeCalories.getOrDefault(MealType.NIGHT, 0));
-            dto.setTotalCalories(totalCalories);
-            
-            DietSummary newSummary = dietSummaryConverter.toEntity(dto);
-            dietSummaryMyBatisMapper.insert(newSummary);
+        summary.update(
+            mealTypeCalories.getOrDefault(MealType.BREAKFAST, 0),
+            mealTypeCalories.getOrDefault(MealType.LUNCH, 0),
+            mealTypeCalories.getOrDefault(MealType.DINNER, 0),
+            mealTypeCalories.getOrDefault(MealType.SNACK, 0),
+            mealTypeCalories.getOrDefault(MealType.NIGHT, 0),
+            totalCalories,
+            totalProtein,
+            totalFat,
+            totalCarbohydrates
+        );
+        
+        if (summary.getId() == null) {
+            dietSummaryMyBatisMapper.insert(summary);
         } else {
-            log.debug("기존 식단 요약 업데이트");
-            // 기존 값 유지하면서 새로운 값만 더하기
-            for (MealType mealType : MealType.values()) {
-                int newCalories = mealTypeCalories.getOrDefault(mealType, 0);
-                if (newCalories > 0) {  // 새로운 값이 있는 경우에만 더하기
-                    switch (mealType) {
-                        case BREAKFAST:
-                            existingSummary = existingSummary.withBreakfastCalories(
-                                existingSummary.getBreakfastCalories() + newCalories);
-                            break;
-                        case LUNCH:
-                            existingSummary = existingSummary.withLunchCalories(
-                                existingSummary.getLunchCalories() + newCalories);
-                            break;
-                        case DINNER:
-                            existingSummary = existingSummary.withDinnerCalories(
-                                existingSummary.getDinnerCalories() + newCalories);
-                            break;
-                        case SNACK:
-                            existingSummary = existingSummary.withSnackCalories(
-                                existingSummary.getSnackCalories() + newCalories);
-                            break;
-                        case NIGHT:
-                            existingSummary = existingSummary.withNightCalories(
-                                existingSummary.getNightCalories() + newCalories);
-                            break;
-                    }
-                }
-            }
-            
-            // 총 칼로리 업데이트
-            existingSummary = existingSummary.withTotalCalories(
-                existingSummary.getTotalCalories() + totalCalories);
-            
-            dietSummaryMyBatisMapper.update(existingSummary);
+            dietSummaryMyBatisMapper.update(summary);
         }
     }
 
@@ -127,16 +94,19 @@ public class DietSummaryServiceImpl implements DietSummaryService {
 
         if (existingSummary != null) {
             log.debug("기존 식단 요약 업데이트");
-            DietSummary updatedSummary = existingSummary
-                .withBreakfastCalories(dto.getBreakfastCalories())
-                .withLunchCalories(dto.getLunchCalories())
-                .withDinnerCalories(dto.getDinnerCalories())
-                .withSnackCalories(dto.getSnackCalories())
-                .withNightCalories(dto.getNightCalories())
-                .withTotalCalories(dto.getTotalCalories());
-
-            dietSummaryMyBatisMapper.update(updatedSummary);
-            return dietSummaryConverter.toDTO(updatedSummary);
+            existingSummary.update(
+                dto.getBreakfastCalories(),
+                dto.getLunchCalories(),
+                dto.getDinnerCalories(),
+                dto.getSnackCalories(),
+                dto.getNightCalories(),
+                dto.getTotalCalories(),
+                dto.getTotalProtein(),
+                dto.getTotalFat(),
+                dto.getTotalCarbohydrates()
+            );
+            dietSummaryMyBatisMapper.update(existingSummary);
+            return dietSummaryConverter.toDTO(existingSummary);
         } else {
             log.debug("새로운 식단 요약 생성");
             DietSummary newSummary = dietSummaryConverter.toEntity(dto);

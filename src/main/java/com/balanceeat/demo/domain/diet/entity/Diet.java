@@ -16,17 +16,19 @@ public class Diet {
     private Long id;
     private Long userId;
     private Long nutritionId;
+    private String foodName;
     private Integer amount;
     private String note;
     private MealType mealType;
     private LocalDate dietDate;
     private LocalTime mealTime;
 
-    public static Diet create(Long userId, Long nutritionId, Integer amount, String note, 
+    public static Diet create(Long userId, Long nutritionId, String foodName, Integer amount, String note, 
                             MealType mealType, LocalDate dietDate, LocalTime mealTime) {
         Diet diet = new Diet();
         diet.userId = userId;
         diet.nutritionId = nutritionId;
+        diet.foodName = foodName;
         diet.amount = amount;
         diet.note = note;
         diet.mealType = mealType;

@@ -1,31 +1,41 @@
 package com.balanceeat.demo.domain.diet.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-@Getter
-public class DietSummary {
-    private final Long id;
-    private final Long userId;
-    private final LocalDate summaryDate;
-    private final double breakfastCalories;
-    private final double lunchCalories;
-    private final double dinnerCalories;
-    private final double snackCalories;
-    private final double nightCalories;
-    private final double totalCalories;
-    private final double totalProtein;
-    private final double totalFat;
-    private final double totalCarbohydrates;
+import com.balanceeat.demo.domain.diet.dto.DietSummaryDTO;
 
-    public DietSummary(Long id, Long userId, LocalDate summaryDate, 
-                      double breakfastCalories, double lunchCalories, double dinnerCalories,
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class DietSummary {
+    private Long id;
+    private Long userId;
+    private LocalDate summaryDate;
+    private double breakfastCalories;
+    private double lunchCalories;
+    private double dinnerCalories;
+    private double snackCalories;
+    private double nightCalories;
+    private double totalCalories;
+    private double totalProtein;
+    private double totalFat;
+    private double totalCarbohydrates;
+    
+    
+    public static DietSummary create(Long userId, LocalDate summaryDate) {
+        DietSummary summary = new DietSummary();
+        summary.userId = userId;
+        summary.summaryDate = summaryDate;
+        return summary;
+    }
+
+    public void update(double breakfastCalories, double lunchCalories, double dinnerCalories,
                       double snackCalories, double nightCalories, double totalCalories,
                       double totalProtein, double totalFat, double totalCarbohydrates) {
-        this.id = id;
-        this.userId = userId;
-        this.summaryDate = summaryDate;
         this.breakfastCalories = breakfastCalories;
         this.lunchCalories = lunchCalories;
         this.dinnerCalories = dinnerCalories;
@@ -35,54 +45,5 @@ public class DietSummary {
         this.totalProtein = totalProtein;
         this.totalFat = totalFat;
         this.totalCarbohydrates = totalCarbohydrates;
-    }
-
-    public DietSummary withId(Long id) {
-        return new DietSummary(id, userId, summaryDate, 
-                             breakfastCalories, lunchCalories, dinnerCalories,
-                             snackCalories, nightCalories, totalCalories,
-                             totalProtein, totalFat, totalCarbohydrates);
-    }
-
-    public DietSummary withBreakfastCalories(double breakfastCalories) {
-        return new DietSummary(id, userId, summaryDate, 
-                             breakfastCalories, lunchCalories, dinnerCalories,
-                             snackCalories, nightCalories, totalCalories,
-                             totalProtein, totalFat, totalCarbohydrates);
-    }
-
-    public DietSummary withLunchCalories(double lunchCalories) {
-        return new DietSummary(id, userId, summaryDate, 
-                             breakfastCalories, lunchCalories, dinnerCalories,
-                             snackCalories, nightCalories, totalCalories,
-                             totalProtein, totalFat, totalCarbohydrates);
-    }
-
-    public DietSummary withDinnerCalories(double dinnerCalories) {
-        return new DietSummary(id, userId, summaryDate, 
-                             breakfastCalories, lunchCalories, dinnerCalories,
-                             snackCalories, nightCalories, totalCalories,
-                             totalProtein, totalFat, totalCarbohydrates);
-    }
-
-    public DietSummary withSnackCalories(double snackCalories) {
-        return new DietSummary(id, userId, summaryDate, 
-                             breakfastCalories, lunchCalories, dinnerCalories,
-                             snackCalories, nightCalories, totalCalories,
-                             totalProtein, totalFat, totalCarbohydrates);
-    }
-
-    public DietSummary withNightCalories(double nightCalories) {
-        return new DietSummary(id, userId, summaryDate, 
-                             breakfastCalories, lunchCalories, dinnerCalories,
-                             snackCalories, nightCalories, totalCalories,
-                             totalProtein, totalFat, totalCarbohydrates);
-    }
-
-    public DietSummary withTotalCalories(double totalCalories) {
-        return new DietSummary(id, userId, summaryDate, 
-                             breakfastCalories, lunchCalories, dinnerCalories,
-                             snackCalories, nightCalories, totalCalories,
-                             totalProtein, totalFat, totalCarbohydrates);
     }
 }
