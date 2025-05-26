@@ -98,9 +98,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void login(LoginRequestDTO loginRequestDTO, HttpServletResponse httpServletResponse) {
         log.debug("로그인 처리 시작: {}", loginRequestDTO.getEmail());
-        User user = userMapper.findByEmail(loginRequestDTO.getEmail())
-            .orElseThrow(UserNotFoundException::new);
-        
+        User user = userService.findByEmail(loginRequestDTO.getEmail());
+
         if (!user.isActive()) {
             log.warn("로그인 실패 - 탈퇴한 회원: {}", loginRequestDTO.getEmail());
             throw new BusinessException(ErrorMessage.USER_ACCOUNT_DISABLED, HttpStatus.BAD_REQUEST);

@@ -8,6 +8,10 @@ CREATE TABLE users (
                        password VARCHAR(255) NOT NULL,
 
     -- 유저 정보
+                        profile_image_url VARCHAR(512),
+                        goal_message VARCHAR(255),
+                        is_challenge_enabled BOOLEAN DEFAULT TRUE,
+
                        nickname VARCHAR(50) NOT NULL,
                        birth_year INT NOT NULL,
                        gender ENUM('MALE', 'FEMALE', 'OTHER') NOT NULL,
@@ -25,4 +29,3 @@ CREATE TABLE users (
     -- 회원 탈퇴 여부
                        is_active BOOLEAN DEFAULT TRUE
 );
-

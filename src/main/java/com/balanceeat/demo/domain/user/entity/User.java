@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +17,10 @@ public class User {
     private String password;
     
     // 유저 정보
+    private String profileImageUrl; // 프로필 사진
+    private String goalMessage; // 한 줄 목표
+    private boolean isChallengeEnabled; // 챌린지 참여 여부
+
     private String nickname;
     private int birthYear;
     private Gender gender;

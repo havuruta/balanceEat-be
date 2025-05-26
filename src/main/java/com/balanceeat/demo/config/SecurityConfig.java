@@ -57,6 +57,7 @@ public class SecurityConfig {
 			authorizeCustomizer -> authorizeCustomizer
 				.requestMatchers(antMatcher("/h2-console/**")).permitAll()
 				.requestMatchers(antMatcher("/auth/**")).permitAll()
+				.requestMatchers(antMatcher("/auth/reissue")).permitAll()
 				.requestMatchers(antMatcher("/api/auth/**")).permitAll()
 				.requestMatchers(antMatcher("/api/nutrition/**")).permitAll()
 				.requestMatchers(antMatcher("/swagger-ui/**")).permitAll()
