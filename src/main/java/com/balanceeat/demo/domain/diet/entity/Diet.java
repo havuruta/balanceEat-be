@@ -37,11 +37,8 @@ public class Diet {
         return diet;
     }
 
-    public void update(Integer amount, String note, MealType mealType, LocalTime mealTime) {
+    public void update(Integer amount) {
         this.amount = amount;
-        this.note = note;
-        this.mealType = mealType;
-        this.mealTime = mealTime;
     }
 
     public boolean isOwner(Long userId) {

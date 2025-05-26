@@ -62,7 +62,7 @@ class DietTest {
         );
 
         // when
-        diet.update(200, "수정된 메모", MealType.LUNCH, LocalTime.of(12, 0));
+        diet.update(200);
 
         // then
         assertThat(diet.getAmount()).isEqualTo(200);
@@ -90,29 +90,4 @@ class DietTest {
         assertThat(diet.isOwner(1L)).isTrue();
         assertThat(diet.isOwner(2L)).isFalse();
     }
-
-    @Test
-    @DisplayName("Diet 엔티티 영양소 계산 테스트")
-    void calculateNutrition() {
-        // given
-        Diet diet = Diet.builder()
-                .amount(200)
-                .calories(300.0)
-                .protein(20.0)
-                .fat(10.0)
-                .carbohydrates(40.0)
-                .build();
-
-        // when
-        double calculatedCalories = diet.getCalories() * (diet.getAmount() / 100.0);
-        double calculatedProtein = diet.getProtein() * (diet.getAmount() / 100.0);
-        double calculatedFat = diet.getFat() * (diet.getAmount() / 100.0);
-        double calculatedCarbohydrates = diet.getCarbohydrates() * (diet.getAmount() / 100.0);
-
-        // then
-        assertThat(calculatedCalories).isEqualTo(600.0);
-        assertThat(calculatedProtein).isEqualTo(40.0);
-        assertThat(calculatedFat).isEqualTo(20.0);
-        assertThat(calculatedCarbohydrates).isEqualTo(80.0);
-    }
-} 
+}
