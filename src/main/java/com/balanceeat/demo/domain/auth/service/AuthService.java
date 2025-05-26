@@ -18,5 +18,5 @@ public interface AuthService {
     @Transactional
     void logout(HttpServletRequest request, HttpServletResponse response);
     @Transactional
-    TokenDTO.Response reissue(HttpServletRequest request, HttpServletResponse response);
+    void reissue(HttpServletRequest request, HttpServletResponse response);
 }

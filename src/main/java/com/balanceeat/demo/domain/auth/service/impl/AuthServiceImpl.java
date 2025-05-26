@@ -173,7 +173,7 @@ public class AuthServiceImpl implements AuthService {
     
     @Transactional
     @Override
-    public TokenDTO.Response reissue(HttpServletRequest request, HttpServletResponse response) {
+    public void reissue(HttpServletRequest request, HttpServletResponse response) {
         // 1. 쿠키에서 refresh 토큰 추출
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
@@ -263,7 +263,6 @@ public class AuthServiceImpl implements AuthService {
         cookieFactory.addRefreshCookie(response, tokenResponse.getRefreshToken());
         
         log.info("토큰 재발급 성공. email: {}", email);
-        return tokenResponse;
     }
     
     private void validateRefreshToken(String refreshToken) {
