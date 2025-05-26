@@ -58,6 +58,7 @@ public class SecurityConfig {
 				.requestMatchers(antMatcher("/h2-console/**")).permitAll()
 				.requestMatchers(antMatcher("/auth/**")).permitAll()
 				.requestMatchers(antMatcher("/api/auth/**")).permitAll()
+				.requestMatchers(antMatcher("/api/nutrition/**")).permitAll()
 				.requestMatchers(antMatcher("/swagger-ui/**")).permitAll()
 				.requestMatchers(antMatcher("/v3/api-docs/**")).permitAll()
 				.requestMatchers(antMatcher("/api/nutrition/**")).permitAll()

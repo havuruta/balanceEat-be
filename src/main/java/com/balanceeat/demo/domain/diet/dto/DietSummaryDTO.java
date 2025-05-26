@@ -1,6 +1,7 @@
 package com.balanceeat.demo.domain.diet.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
 import lombok.Builder;
@@ -14,34 +15,19 @@ import com.balanceeat.demo.domain.diet.entity.Diet;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DietSummaryDTO {
+    private Long id;
+    private Long userId;
     private LocalDate summaryDate;
     
-    // 아침 식사 정보
-    private List<Diet> breakfast;
     private int breakfastCalories;
-    private int breakfastProtein;
-    private int breakfastFat;
-    private int breakfastCarbohydrates;
-    
-    // 점심 식사 정보
-    private List<Diet> lunch;
     private int lunchCalories;
-    private int lunchProtein;
-    private int lunchFat;
-    private int lunchCarbohydrates;
-    
-    // 저녁 식사 정보
-    private List<Diet> dinner;
     private int dinnerCalories;
-    private int dinnerProtein;
-    private int dinnerFat;
-    private int dinnerCarbohydrates;
-    
-    // 일일 총 영양 정보
-    private int totalCalories;
-    private int totalProtein;
-    private int totalFat;
-    private int totalCarbohydrates;
+    private double snackCalories;
+    private double nightCalories;
+    private double totalCalories;
+    private double totalProtein;
+    private double totalFat;
+    private double totalCarbohydrates;
     
     public static DietSummaryDTO fromEntity(DietSummary entity) {
         if (entity == null) {
@@ -49,31 +35,16 @@ public class DietSummaryDTO {
         }
         
         return DietSummaryDTO.builder()
-                .summaryDate(entity.getSummaryDate())
-                // 아침 식사
-                .breakfast(entity.getBreakfast())
-                .breakfastCalories(roundToInt(entity.getBreakfastCalories()))
-                .breakfastProtein(roundToInt(entity.getBreakfastProtein()))
-                .breakfastFat(roundToInt(entity.getBreakfastFat()))
-                .breakfastCarbohydrates(roundToInt(entity.getBreakfastCarbohydrates()))
-                // 점심 식사
-                .lunch(entity.getLunch())
-                .lunchCalories(roundToInt(entity.getLunchCalories()))
-                .lunchProtein(roundToInt(entity.getLunchProtein()))
-                .lunchFat(roundToInt(entity.getLunchFat()))
-                .lunchCarbohydrates(roundToInt(entity.getLunchCarbohydrates()))
-                // 저녁 식사
-                .dinner(entity.getDinner())
-                .dinnerCalories(roundToInt(entity.getDinnerCalories()))
-                .dinnerProtein(roundToInt(entity.getDinnerProtein()))
-                .dinnerFat(roundToInt(entity.getDinnerFat()))
-                .dinnerCarbohydrates(roundToInt(entity.getDinnerCarbohydrates()))
-                // 일일 총합
-                .totalCalories(roundToInt(entity.getTotalCalories()))
-                .totalProtein(roundToInt(entity.getTotalProtein()))
-                .totalFat(roundToInt(entity.getTotalFat()))
-                .totalCarbohydrates(roundToInt(entity.getTotalCarbohydrates()))
-                .build();
+            .id(entity.getId())
+            .userId(entity.getUserId())
+            .summaryDate(entity.getSummaryDate())
+            .breakfastCalories((int) entity.getBreakfastCalories())
+            .lunchCalories((int) entity.getLunchCalories())
+            .dinnerCalories((int) entity.getDinnerCalories())
+            .snackCalories(entity.getSnackCalories())
+            .nightCalories(entity.getNightCalories())
+            .totalCalories(entity.getTotalCalories())
+            .build();
     }
     
     private static int roundToInt(Double value) {

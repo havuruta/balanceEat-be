@@ -1,5 +1,7 @@
 package com.balanceeat.demo.domain.diet.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -7,22 +9,26 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Diet {
     private Long id;
     private Long userId;
     private Long nutritionId;
+    private String foodName;
     private Integer amount;
     private String note;
     private MealType mealType;
     private LocalDate dietDate;
     private LocalTime mealTime;
 
-    public static Diet create(Long userId, Long nutritionId, Integer amount, String note, 
+    public static Diet create(Long userId, Long nutritionId, String foodName, Integer amount, String note, 
                             MealType mealType, LocalDate dietDate, LocalTime mealTime) {
         Diet diet = new Diet();
         diet.userId = userId;
         diet.nutritionId = nutritionId;
+        diet.foodName = foodName;
         diet.amount = amount;
         diet.note = note;
         diet.mealType = mealType;
@@ -31,11 +37,8 @@ public class Diet {
         return diet;
     }
 
-    public void update(Integer amount, String note, MealType mealType, LocalTime mealTime) {
+    public void update(Integer amount) {
         this.amount = amount;
-        this.note = note;
-        this.mealType = mealType;
-        this.mealTime = mealTime;
     }
 
     public boolean isOwner(Long userId) {

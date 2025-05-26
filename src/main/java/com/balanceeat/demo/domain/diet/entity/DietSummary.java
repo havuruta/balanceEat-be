@@ -1,62 +1,49 @@
 package com.balanceeat.demo.domain.diet.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import com.balanceeat.demo.domain.diet.dto.DietSummaryDTO;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class DietSummary {
     private Long id;
     private Long userId;
     private LocalDate summaryDate;
+    private double breakfastCalories;
+    private double lunchCalories;
+    private double dinnerCalories;
+    private double snackCalories;
+    private double nightCalories;
+    private double totalCalories;
+    private double totalProtein;
+    private double totalFat;
+    private double totalCarbohydrates;
     
-    private int breakfastCalories;
-    private int lunchCalories;
-    private int dinnerCalories;
-    private int snackCalories;
-    private int nightCalories;
     
-    // 일일 총 영양 정보
-    private int totalCalories;
-    private int totalProtein;
-    private int totalFat;
-    private int totalCarbohydrates;
-    
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
     public static DietSummary create(Long userId, LocalDate summaryDate) {
         DietSummary summary = new DietSummary();
         summary.userId = userId;
         summary.summaryDate = summaryDate;
-        summary.breakfastCalories = 0;
-        summary.lunchCalories = 0;
-        summary.dinnerCalories = 0;
-        summary.snackCalories = 0;
-        summary.nightCalories = 0;
-        summary.totalCalories = 0;
-        summary.totalProtein = 0;
-        summary.totalFat = 0;
-        summary.totalCarbohydrates = 0;
         return summary;
     }
 
-    public void updateCalories(int breakfast, int lunch, int dinner, 
-                             int snack, int night, int total) {
-        this.breakfastCalories = breakfast;
-        this.lunchCalories = lunch;
-        this.dinnerCalories = dinner;
-        this.snackCalories = snack;
-        this.nightCalories = night;
-        this.totalCalories = total;
+    public void update(double breakfastCalories, double lunchCalories, double dinnerCalories,
+                      double snackCalories, double nightCalories, double totalCalories,
+                      double totalProtein, double totalFat, double totalCarbohydrates) {
+        this.breakfastCalories = breakfastCalories;
+        this.lunchCalories = lunchCalories;
+        this.dinnerCalories = dinnerCalories;
+        this.snackCalories = snackCalories;
+        this.nightCalories = nightCalories;
+        this.totalCalories = totalCalories;
+        this.totalProtein = totalProtein;
+        this.totalFat = totalFat;
+        this.totalCarbohydrates = totalCarbohydrates;
     }
-
-    public void updateNutrition(int protein, int fat, int carbs) {
-        this.totalProtein = protein;
-        this.totalFat = fat;
-        this.totalCarbohydrates = carbs;
-    }
-} 
+}

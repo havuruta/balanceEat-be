@@ -38,6 +38,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+
+import io.jsonwebtoken.Claims;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -113,9 +118,9 @@ public class AuthServiceImpl implements AuthService {
             TokenDTO.Response tokens = tokenProvider.generateToken(authentication);
             
             // 5. 리프레시 토큰 갱신
-            refreshTokenRepository.deleteByKey(authentication.getName());
+            refreshTokenRepository.deleteByKey(userPrincipal.getEmail());
             refreshTokenRepository.save(
-                authentication.getName(), tokens.getRefreshToken(),
+                userPrincipal.getEmail(), tokens.getRefreshToken(),
                 tokenProvider.getRefreshTokenExpirationTime());
             
             // 6. 쿠키 설정
@@ -173,47 +178,114 @@ public class AuthServiceImpl implements AuthService {
         // 1. 쿠키에서 리프레시 토큰 추출
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
+        log.info("reissue 요청의 모든 쿠키: {}", Arrays.toString(cookies));
+        
         if (cookies != null) {
             for (Cookie cookie : cookies) {
+                log.info("쿠키 검사 - 이름: {}, 값: {}", cookie.getName(), cookie.getValue());
                 if (TokenProvider.REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
+                    log.info("리프레시 토큰 추출 성공: {}", refreshToken);
                     break;
                 }
             }
         }
         
         if (refreshToken == null) {
-            log.warn("리프레시 토큰이 없습니다");
+            log.warn("리프레시 토큰이 없습니다.");
             throw new InvalidTokenException();
         }
         
-        // 2. 리프레시 토큰 검증
-        if (!tokenProvider.validateToken(refreshToken)) {
-            log.warn("유효하지 않은 리프레시 토큰입니다");
+        // 2. 리프레시 토큰 유효성 검증
+        validateRefreshToken(refreshToken);
+        
+        // 3. 리프레시 토큰에서 사용자 정보 추출
+        Claims claims = tokenProvider.parseClaims(refreshToken);
+        String email = claims.get(TokenProvider.USER_EMAIL, String.class);
+        log.info("리프레시 토큰에서 추출한 이메일: {}", email);
+        
+        if (email == null) {
+            log.warn("리프레시 토큰에서 이메일을 추출할 수 없습니다.");
             throw new InvalidTokenException();
         }
         
-        // 3. Redis에서 리프레시 토큰 확인
-        RefreshToken storedToken = refreshTokenRepository.findByKey(refreshToken)
-            .orElseThrow(InvalidTokenException::new);
+        // 4. Redis에서 저장된 토큰 조회 및 검증
+        String storedToken = refreshTokenRepository.findByKey(email)
+            .map(RefreshToken::getValue)
+            .orElse(null);
+            
+        if (storedToken == null) {
+            log.warn("Redis에 저장된 토큰이 없습니다. email: {}", email);
+            throw new InvalidTokenException();
+        }
         
-        // 4. 새로운 토큰 생성
-        Authentication authentication = tokenProvider.getAuthentication(refreshToken, request);
-        TokenDTO.Response tokens = tokenProvider.generateToken(authentication);
+        // 토큰의 클레임을 비교
+        Claims storedClaims = tokenProvider.parseClaims(storedToken);
+        Claims providedClaims = tokenProvider.parseClaims(refreshToken);
         
-        // 5. Redis에 새로운 리프레시 토큰 저장
-        refreshTokenRepository.deleteByKey(refreshToken);
+        if (!storedClaims.get(TokenProvider.USER_EMAIL).equals(providedClaims.get(TokenProvider.USER_EMAIL)) ||
+            !storedClaims.get(TokenProvider.USER_ID).equals(providedClaims.get(TokenProvider.USER_ID))) {
+            log.warn("Redis에 저장된 토큰과 일치하지 않습니다. email: {}, storedToken: {}, providedToken: {}", 
+                email, storedToken, refreshToken);
+            throw new InvalidTokenException();
+        }
+        
+        // 5. 사용자 정보로 인증 객체 생성
+        User user = userMapper.findByEmail(email)
+            .orElseThrow(() -> {
+                log.error("사용자를 찾을 수 없습니다. email: {}", email);
+                return new UserNotFoundException();
+            });
+            
+        if (!user.isActive()) {
+            log.warn("비활성화된 사용자입니다. email: {}", email);
+            throw new BusinessException(ErrorMessage.USER_ACCOUNT_DISABLED, HttpStatus.BAD_REQUEST);
+        }
+        
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            userPrincipal, null, userPrincipal.getAuthorities());
+        
+        // 6. 이전 리프레시 토큰 삭제
+        refreshTokenRepository.deleteByKey(email);
+        
+        // 7. 새로운 토큰 생성
+        TokenDTO.Response tokenResponse = tokenProvider.generateToken(authentication);
+        
+        // 8. 새로운 리프레시 토큰 저장
+
         refreshTokenRepository.save(
             authentication.getName(),
             tokens.getRefreshToken(),
             tokenProvider.getRefreshTokenExpirationTime()
         );
         
-        // 6. 새로운 토큰을 쿠키에 설정
-        cookieFactory.addAccessCookie(response, tokens.getAccessToken());
-        cookieFactory.addRefreshCookie(response, tokens.getRefreshToken());
+        // 9. 새로운 쿠키 설정
+        cookieFactory.addAccessCookie(response, tokenResponse.getAccessToken());
+        cookieFactory.addRefreshCookie(response, tokenResponse.getRefreshToken());
         
-        log.debug("토큰 재발급 완료");
+        log.info("토큰 재발급 성공. email: {}", email);
+    }
+    
+    private void validateRefreshToken(String refreshToken) {
+        if (!tokenProvider.validateToken(refreshToken)) {
+            log.warn("리프레시 토큰이 유효하지 않습니다.");
+            throw new InvalidTokenException();
+        }
+
+        Claims claims = tokenProvider.parseClaims(refreshToken);
+    }
+    
+    private String getRefreshToken(String memberId) {
+        return refreshTokenRepository.findByKey(memberId)
+            .map(RefreshToken::getValue)
+            .orElseThrow(() -> new NoSuchElementException(ErrorMessage.USER_ALREADY_LOGOUT));
+    }
+    
+    private void validateTokenMatch(String storedToken, String providedToken) {
+        if (!storedToken.equals(providedToken)) {
+            throw new InvalidTokenException();
+        }
     }
 }
 

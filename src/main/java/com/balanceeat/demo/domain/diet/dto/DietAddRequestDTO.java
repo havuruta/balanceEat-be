@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Getter
+@Setter
 public class DietAddRequestDTO {
 	
 	private List<DietSimpleDTO> diets;
@@ -16,6 +17,7 @@ public class DietAddRequestDTO {
 	@Setter
 	public static class DietSimpleDTO {
 		private Long nutritionId;
+		private String foodName;
 		private String amount;
 		private String note;
 		private MealType mealType;
