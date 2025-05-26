@@ -37,7 +37,7 @@ public class Diet {
         return diet;
     }
 
-    public void update(Integer amount) {
+    public void updateAmount(Integer amount) {
         this.amount = amount;
     }
 

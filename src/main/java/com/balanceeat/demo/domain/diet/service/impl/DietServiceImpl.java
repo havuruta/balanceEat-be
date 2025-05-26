@@ -1,7 +1,6 @@
 package com.balanceeat.demo.domain.diet.service.impl;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -120,46 +119,9 @@ public class DietServiceImpl implements DietService {
     public List<DietSummaryDTO> getDietSummariesByDateRange(Long userId, LocalDate start, LocalDate end) {
         return dietSummaryService.getSummariesByDateRange(userId, start, end);
     }
-
+    
     @Override
-    public void addDiet(Diet diet) {
-        dietMapper.insert(diet);
-    }
-
-    @Override
-    public void updateDiet(Long dietId, DietUpdateRequestDTO request, Long userId) {
-        log.info("식단 수정 서비스 호출: dietId={}, userId={}", dietId, userId);
-        
-        Diet diet = dietMapper.findById(dietId)
-            .orElseThrow(() -> new DietNotFoundException("식단을 찾을 수 없습니다: " + dietId));
-        
-        if (!diet.isOwner(userId)) {
-            throw new UnauthorizedException("식단을 수정할 권한이 없습니다.");
-        }
-
-        // null-safe: 값이 없으면 기존 값 유지
-        Integer amount = request.getAmount() != null ? request.getAmount() : diet.getAmount();
-        String note = request.getNote() != null ? request.getNote() : diet.getNote();
-        MealType mealType = request.getMealType() != null ? request.getMealType() : diet.getMealType();
-
-        diet.update(amount);
-        
-        dietMapper.update(diet);
-        log.info("식단 수정 완료");
-    }
-
-    @Override
-    public void deleteDiet(Long id) {
-        dietMapper.delete(id);
-    }
-
-    @Override
-    public List<Diet> getDietsByDate(Long userId, LocalDate date) {
-        return dietMapper.findByDate(userId, date);
-    }
-
-    @Override
-    public DietDetailResponse getDietDetailByDate(LocalDate date, Long userId) {
+    public DietDetailResponse getDietDetailByDate(Long userId, LocalDate date) {
         List<Diet> diets = dietMapper.findByDate(userId, date);
         DietSummary summary = dietSummaryService.getSummaryByDate(userId, date);
         
@@ -216,5 +178,47 @@ public class DietServiceImpl implements DietService {
             .totalFat(summary.getTotalFat())
             .totalCarbohydrates(summary.getTotalCarbohydrates())
             .build();
+    }
+    
+    @Override
+    public void updateDiet(Long dietId, DietUpdateRequestDTO request, Long userId) {
+        log.info("식단 수정 서비스 호출: dietId={}, userId={}", dietId, userId);
+        
+        Diet diet = dietMapper.findById(dietId)
+            .orElseThrow(() -> new DietNotFoundException("식단을 찾을 수 없습니다: " + dietId));
+        
+        if (!diet.isOwner(userId)) {
+            throw new UnauthorizedException("식단을 수정할 권한이 없습니다.");
+        }
+        
+        diet.updateAmount(request.getAmount());
+        dietMapper.update(diet);
+        log.info("식단 수정 완료");
+    }
+
+    @Override
+    public void deleteDiet(Long dietId, Long userId) {
+        Diet diet = dietMapper.findById(dietId)
+            .orElseThrow(() -> new DietNotFoundException("식단을 찾을 수 없습니다: " + dietId));
+        
+        if (!diet.isOwner(userId)) {
+            throw new UnauthorizedException("식단을 수정할 권한이 없습니다.");
+        }
+        
+        dietMapper.delete(dietId);
+    }
+
+    @Override
+    public List<DietDTO> getDietsByDate(Long userId, LocalDate date) {
+        return dietMapper.findByDate(userId, date).stream()
+            .map(diet -> DietDTO.builder()
+                .id(diet.getId())
+                .foodName(diet.getFoodName())
+                .amount(diet.getAmount())
+                .mealType(diet.getMealType())
+                .note(diet.getNote())
+                .mealTime(diet.getMealTime())
+                .build())
+            .collect(Collectors.toList());
     }
 } 
