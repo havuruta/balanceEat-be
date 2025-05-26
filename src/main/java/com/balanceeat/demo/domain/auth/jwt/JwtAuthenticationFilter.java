@@ -31,7 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         String requestURI = request.getRequestURI();
-        log.info("JwtAuthenticationFilter 시작 - 요청 URI: {}", requestURI);
 
         // 토큰 재발급 요청은 이 필터를 건너뜁니다
         if (requestURI.equals("/auth/reissue")) {
@@ -41,14 +40,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String jwt = getJwtFromRequest(request);
-            log.info("추출된 JWT 토큰: {}", jwt);
 
             if (StringUtils.hasText(jwt)) {
-                log.info("토큰 검증 시작");
                 if (tokenProvider.validateToken(jwt)) {
-                    log.info("토큰 검증 성공");
                     Authentication authentication = tokenProvider.getAuthentication(jwt, request);
-                    log.info("생성된 Authentication: {}", authentication);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
                     log.warn("토큰 검증 실패");
@@ -71,18 +66,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return null;
             }
 
-            log.info("요청의 모든 쿠키: {}", Arrays.toString(cookies));
-            log.info("요청 헤더: {}", Collections.list(request.getHeaderNames())
-                .stream()
-                .collect(Collectors.toMap(
-                    headerName -> headerName,
-                    request::getHeader
-                )));
-
             Optional<Cookie> accessTokenCookie = Arrays.stream(cookies)
                 .filter(cookie -> {
                     boolean matches = TokenProvider.ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName());
-                    log.info("쿠키 검사 - 이름: {}, 일치여부: {}", cookie.getName(), matches);
                     return matches;
                 })
                 .findFirst();
@@ -90,10 +76,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (accessTokenCookie.isPresent()) {
                 String token = accessTokenCookie.get().getValue();
                 if (StringUtils.hasText(token)) {
-                    log.info("쿠키에서 추출한 토큰: {}", token);
                     return token;
                 } else {
-                    log.warn("access_token 쿠키의 값이 비어있습니다");
                 }
             } else {
                 log.warn("access_token 쿠키를 찾을 수 없습니다. 찾는 쿠키 이름: {}", TokenProvider.ACCESS_TOKEN_COOKIE_NAME);

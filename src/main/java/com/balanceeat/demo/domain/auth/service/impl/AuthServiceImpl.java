@@ -245,17 +245,20 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = new UsernamePasswordAuthenticationToken(
             userPrincipal, null, userPrincipal.getAuthorities());
         
-        // 6. 새로운 토큰 생성
+        // 6. 이전 리프레시 토큰 삭제
+        refreshTokenRepository.deleteByKey(email);
+        
+        // 7. 새로운 토큰 생성
         TokenDTO.Response tokenResponse = tokenProvider.generateToken(authentication);
         
-        // 7. 리프레시 토큰 업데이트
+        // 8. 새로운 리프레시 토큰 저장
         refreshTokenRepository.save(
             authentication.getName(),
             tokenResponse.getRefreshToken(),
             tokenProvider.getRefreshTokenExpirationTime()
         );
         
-        // 8. 새로운 쿠키 설정
+        // 9. 새로운 쿠키 설정
         cookieFactory.addAccessCookie(response, tokenResponse.getAccessToken());
         cookieFactory.addRefreshCookie(response, tokenResponse.getRefreshToken());
         
