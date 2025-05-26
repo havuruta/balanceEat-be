@@ -1,14 +1,22 @@
 package com.balanceeat.demo.domain.diet.dto;
 
 import com.balanceeat.demo.domain.diet.entity.MealType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+import java.time.LocalTime;
+
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DietDTO {
     private Long id;
     private String foodName;
-    private double amount;
+    private Integer amount;
     private MealType mealType;
+    private String note;
+    private LocalTime mealTime;
 } 
