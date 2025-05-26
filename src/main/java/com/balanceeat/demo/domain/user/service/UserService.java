@@ -2,6 +2,7 @@ package com.balanceeat.demo.domain.user.service;
 
 import com.balanceeat.demo.domain.user.dto.UserDTO;
 import com.balanceeat.demo.domain.user.dto.UserProfileDTO;
+import com.balanceeat.demo.domain.user.dto.UserResponseDTO;
 import com.balanceeat.demo.domain.user.entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -13,4 +14,5 @@ public interface UserService {
     UserProfileDTO getCurrentUserProfile(UserDetails userDetails);
     UserDTO updateUser(UserDTO userDto, UserDetails userDetails);
     void deleteUser(Long id);
+	UserResponseDTO getUserResponseDTO(Long userId);
 }
