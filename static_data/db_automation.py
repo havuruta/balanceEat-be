@@ -11,14 +11,14 @@ filtered_df = df[['식품명', '식품대분류명','에너지(kcal)', '단백�
 conn = mysql.connector.connect(
     host='localhost',
     user='root',
-    password='root',
-    database='balanceeat'
+    password='1234',
+    database='balance_eat'
 )
 cursor = conn.cursor()
 
 # INSERT 쿼리
 insert_query = """
-    INSERT INTO nutrition (food_name, category, energy, protein, fat, carbohydrate)
+    INSERT INTO nutrition (name, category, calories, protein, fat, carbohydrates)
     VALUES (%s, %s, %s, %s, %s, %s)
 """
 
