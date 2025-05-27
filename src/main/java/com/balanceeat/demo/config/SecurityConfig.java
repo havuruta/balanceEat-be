@@ -59,6 +59,7 @@ public class SecurityConfig {
 				.requestMatchers(antMatcher("/auth/**")).permitAll()
 				.requestMatchers(antMatcher("/auth/reissue")).permitAll()
 				.requestMatchers(antMatcher("/api/auth/**")).permitAll()
+				.requestMatchers(antMatcher("/api/chat/**")).permitAll()
 				.requestMatchers(antMatcher("/api/nutrition/**")).permitAll()
 				.requestMatchers(antMatcher("/swagger-ui/**")).permitAll()
 				.requestMatchers(antMatcher("/v3/api-docs/**")).permitAll()

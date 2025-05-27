@@ -26,11 +26,15 @@ public class RedisRefreshTokenRepository {
             // 기존 토큰이 있는지 확인
             String existingToken = redisTemplate.opsForValue().get(redisKey);
             if (existingToken != null) {
-                log.warn("기존 토큰이 존재합니다. Key: {}, 기존 토큰: {}", redisKey, existingToken);
+                log.info("기존 토큰이 존재합니다. Key: {}, 기존 토큰: {}", redisKey, existingToken);
+                // 기존 토큰이 있을 때만 새로운 토큰으로 업데이트
+                redisTemplate.opsForValue().set(redisKey, value, expirationTime, TimeUnit.SECONDS);
+                log.info("Redis 토큰 업데이트 성공 - Key: {}", redisKey);
+            } else {
+                log.info("기존 토큰이 없어 새로운 토큰을 저장합니다.");
+                redisTemplate.opsForValue().set(redisKey, value, expirationTime, TimeUnit.SECONDS);
+                log.info("Redis 토큰 저장 성공 - Key: {}", redisKey);
             }
-            
-            redisTemplate.opsForValue().set(redisKey, value, expirationTime, TimeUnit.SECONDS);
-            log.info("Redis 토큰 저장 성공 - Key: {}", redisKey);
         } catch (Exception e) {
             log.error("Redis 토큰 저장 실패 - Key: {}, Error: {}", redisKey, e.getMessage(), e);
             throw e;

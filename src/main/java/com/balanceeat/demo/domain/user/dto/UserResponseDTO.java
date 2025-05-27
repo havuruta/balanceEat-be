@@ -1,7 +1,5 @@
 package com.balanceeat.demo.domain.user.dto;
 
-import com.balanceeat.demo.domain.user.entity.Gender;
-import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,5 +22,4 @@ public class UserResponseDTO {
 	private String dietHabit;
 	private String foodBlacklist;
 	private String foodPreference;
-	private LocalDate createDate;
 }

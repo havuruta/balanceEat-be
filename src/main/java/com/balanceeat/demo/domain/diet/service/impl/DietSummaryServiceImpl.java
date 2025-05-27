@@ -58,9 +58,29 @@ public class DietSummaryServiceImpl implements DietSummaryService {
     }
 
     @Override
+    public DietSummaryDTO getSummaryDTOByDate(Long userId, LocalDate date) {
+        DietSummary summary = dietSummaryMyBatisMapper.findByUserIdAndDate(userId, date)
+            .orElse(DietSummary.create(userId, date));
+        
+        return DietSummaryDTO.builder()
+            .id(summary.getId())
+            .summaryDate(summary.getSummaryDate())
+            .breakfastCalories(summary.getBreakfastCalories())
+            .lunchCalories(summary.getLunchCalories())
+            .dinnerCalories(summary.getDinnerCalories())
+            .snackCalories(summary.getSnackCalories())
+            .nightCalories(summary.getNightCalories())
+            .totalCalories(summary.getTotalCalories())
+            .totalCarbohydrates(summary.getTotalCarbohydrates())
+            .totalProtein(summary.getTotalProtein())
+            .totalFat(summary.getTotalFat())
+            .build();
+    }
+    
+    @Override
     public DietSummary getSummaryByDate(Long userId, LocalDate date) {
-        log.debug("특정 날짜 식단 요약 조회: 사용자 ID={}, 날짜={}", userId, date);
-        return dietSummaryMyBatisMapper.findByDateAndUserId(date, userId);
+        return dietSummaryMyBatisMapper.findByUserIdAndDate(userId, date)
+            .orElse(DietSummary.create(userId, date));
     }
 
     @Override
