@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.balanceeat.demo.domain.diet.mapper.DietScoreMapper">
 
-    <insert id="upsert" parameterType="com.balanceeat.demo.domain.ai.entity.DietScoreResult">
+    <insert id="upsert" parameterType="com.balanceeat.demo.domain.dietScoreResult.entity.DietScoreResult">
         INSERT INTO daily_diet_scores
             (user_id, date, score, feedback)
         VALUES
@@ -13,7 +13,7 @@
             created_at = CURRENT_TIMESTAMP
     </insert>
 
-    <select id="findByUserIdAndDate" resultType="com.balanceeat.demo.domain.ai.entity.DietScoreResult">
+    <select id="findByUserIdAndDate" resultType="com.balanceeat.demo.domain.dietScoreResult.entity.DietScoreResult">
         SELECT 
             user_id as userId,
             date,

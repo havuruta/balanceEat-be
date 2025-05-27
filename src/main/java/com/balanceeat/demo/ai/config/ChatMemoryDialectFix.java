@@ -1,4 +1,4 @@
-package com.balanceeat.demo.domain.ai.config;
+package com.balanceeat.demo.ai.config;
 
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepositoryDialect;
 import org.springframework.ai.chat.memory.repository.jdbc.MysqlChatMemoryRepositoryDialect;

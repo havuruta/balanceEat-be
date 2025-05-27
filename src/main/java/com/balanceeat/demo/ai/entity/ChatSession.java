@@ -1,4 +1,4 @@
-package com.balanceeat.demo.domain.ai.entity;
+package com.balanceeat.demo.ai.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

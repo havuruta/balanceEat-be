@@ -1,4 +1,4 @@
-package com.balanceeat.demo.domain.ai.service;
+package com.balanceeat.demo.ai.service;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;

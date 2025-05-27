@@ -1,13 +1,6 @@
-package com.balanceeat.demo.domain.ai.service;
-
-import java.util.List;
+package com.balanceeat.demo.ai.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.balanceeat.demo.domain.ai.entity.ChatMessage;
-import com.balanceeat.demo.domain.ai.entity.ChatSession;
-import com.balanceeat.demo.exception.ai.SessionNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 

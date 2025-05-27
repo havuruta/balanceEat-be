@@ -1,4 +1,4 @@
-package com.balanceeat.demo.domain.ai.config;
+package com.balanceeat.demo.ai.config;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
@@ -25,10 +25,11 @@ public class ChatMemoryConfig {
     }
     
     @Bean
-    ChatClient chatClient(ChatClient.Builder builder) {
+    ChatClient chatClient(ChatClient.Builder builder, PromptChatMemoryAdvisor memoryAdvisor) {
         return builder
             .defaultSystem("간결한 한국어 답변")
-            .build();               // 싱글턴 재사용
+            .defaultAdvisors(memoryAdvisor)
+            .build();
     }
     
 }
