@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.balanceeat.demo.domain.ai.entity.DietScoreResult;
+import com.balanceeat.demo.domain.dietScoreResult.entity.DietScoreResult;
 
 @Mapper
 public interface DietScoreMapper {

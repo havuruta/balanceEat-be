@@ -1,26 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.balanceeat.demo.domain.diet.mapper.DietScoreMapper">
+<mapper namespace="com.balanceeat.demo.domain.dietScoreResult.mapper.DietScoreResultMapper">
+    
+    <resultMap id="DietScoreResultMap" type="com.balanceeat.demo.domain.dietScoreResult.entity.DietScoreResult">
+        <result property="userId" column="user_id"/>
+        <result property="date" column="date"/>
+        <result property="score" column="score"/>
+        <result property="feedback" column="feedback"/>
+        <result property="calorieAnalysis" column="calorieAnalysis"/>
+        <result property="nutrientAnalysis" column="nutrientAnalysis"/>
+        <result property="suggestions1" column="suggestions1"/>
+        <result property="suggestions2" column="suggestions2"/>
+        <result property="suggestions3" column="suggestions3"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
 
     <insert id="upsert" parameterType="com.balanceeat.demo.domain.dietScoreResult.entity.DietScoreResult">
-        INSERT INTO daily_diet_scores
-            (user_id, date, score, feedback)
-        VALUES
-            (#{userId}, #{date}, #{score}, #{feedback})
-        ON DUPLICATE KEY UPDATE
-            score = VALUES(score),
-            feedback = VALUES(feedback),
-            created_at = CURRENT_TIMESTAMP
-    </insert>
-
-    <select id="findByUserIdAndDate" resultType="com.balanceeat.demo.domain.dietScoreResult.entity.DietScoreResult">
-        SELECT 
-            user_id as userId,
+        INSERT INTO diet_score_result (
+            user_id,
             date,
             score,
             feedback,
-            created_at as createdAt
-        FROM daily_diet_scores
+            calorieAnalysis,
+            nutrientAnalysis,
+            suggestions1,
+            suggestions2,
+            suggestions3,
+            created_at
+        ) VALUES (
+            #{userId},
+            #{date},
+            #{score},
+            #{feedback},
+            #{calorieAnalysis},
+            #{nutrientAnalysis},
+            #{suggestions1},
+            #{suggestions2},
+            #{suggestions3},
+            NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            score = VALUES(score),
+            feedback = VALUES(feedback),
+            calorieAnalysis = VALUES(calorieAnalysis),
+            nutrientAnalysis = VALUES(nutrientAnalysis),
+            suggestions1 = VALUES(suggestions1),
+            suggestions2 = VALUES(suggestions2),
+            suggestions3 = VALUES(suggestions3),
+            created_at = NOW()
+    </insert>
+
+    <select id="findByUserIdAndDate" resultMap="DietScoreResultMap">
+        SELECT 
+            user_id,
+            date,
+            score,
+            feedback,
+            calorieAnalysis,
+            nutrientAnalysis,
+            suggestions1,
+            suggestions2,
+            suggestions3,
+            created_at
+        FROM diet_score_result
         WHERE user_id = #{userId}
         AND date = #{date}
     </select>
