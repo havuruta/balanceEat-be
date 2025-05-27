@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,8 +73,11 @@ public class DietServiceImpl implements DietService {
         // 3. DietSummary 업데이트
         LocalDate summaryDate = LocalDate.parse(request.getDiets().get(0).getDietDate());
         
-        // 식사 타입별 칼로리 계산
-        Map<MealType, Integer> mealTypeCalories = diets.stream()
+        // 기존 DietSummary 조회
+        DietSummary existingSummary = dietSummaryService.getSummaryByDate(userId, summaryDate);
+        
+        // 새로운 식사 타입별 칼로리 계산
+        Map<MealType, Integer> newMealTypeCalories = diets.stream()
             .collect(Collectors.groupingBy(
                 Diet::getMealType,
                 Collectors.summingInt(diet -> {
@@ -82,34 +86,63 @@ public class DietServiceImpl implements DietService {
                 })
             ));
         
-        // 일일 총 영양 정보 계산
-        int totalCalories = diets.stream()
+        // 기존 값과 새로운 값을 합산
+        Map<MealType, Integer> mealTypeCalories = new HashMap<>();
+        for (MealType type : MealType.values()) {
+            double existingCalories = 0;
+            if (existingSummary != null) {
+                switch (type) {
+                    case BREAKFAST: existingCalories = existingSummary.getBreakfastCalories(); break;
+                    case LUNCH: existingCalories = existingSummary.getLunchCalories(); break;
+                    case DINNER: existingCalories = existingSummary.getDinnerCalories(); break;
+                    case SNACK: existingCalories = existingSummary.getSnackCalories(); break;
+                    case NIGHT: existingCalories = existingSummary.getNightCalories(); break;
+                }
+            }
+            mealTypeCalories.put(type, (int)existingCalories + newMealTypeCalories.getOrDefault(type, 0));
+        }
+        
+        // 새로운 영양소 계산
+        int newTotalCalories = diets.stream()
             .mapToInt(diet -> {
                 Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
                 return (int)(nutrition.getCalories() * diet.getAmount() / 100);
             })
             .sum();
         
-        double totalProtein = diets.stream()
+        double newTotalProtein = diets.stream()
             .mapToDouble(diet -> {
                 Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
                 return nutrition.getProtein() * diet.getAmount() / 100;
             })
             .sum();
         
-        double totalFat = diets.stream()
+        double newTotalFat = diets.stream()
             .mapToDouble(diet -> {
                 Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
                 return nutrition.getFat() * diet.getAmount() / 100;
             })
             .sum();
         
-        double totalCarbohydrates = diets.stream()
+        double newTotalCarbohydrates = diets.stream()
             .mapToDouble(diet -> {
                 Nutrition nutrition = nutritionMap.get(diet.getNutritionId());
                 return nutrition.getCarbohydrates() * diet.getAmount() / 100;
             })
             .sum();
+        
+        // 기존 값과 새로운 값을 합산
+        int totalCalories = newTotalCalories;
+        double totalProtein = newTotalProtein;
+        double totalFat = newTotalFat;
+        double totalCarbohydrates = newTotalCarbohydrates;
+        
+        if (existingSummary != null) {
+            totalCalories += existingSummary.getTotalCalories();
+            totalProtein += existingSummary.getTotalProtein();
+            totalFat += existingSummary.getTotalFat();
+            totalCarbohydrates += existingSummary.getTotalCarbohydrates();
+        }
         
         dietSummaryService.updateSummary(userId, summaryDate, mealTypeCalories, totalCalories, 
             totalProtein, totalFat, totalCarbohydrates);
@@ -190,6 +223,65 @@ public class DietServiceImpl implements DietService {
         if (!diet.isOwner(userId)) {
             throw new UnauthorizedException("식단을 수정할 권한이 없습니다.");
         }
+
+        // 기존 영양소 정보 조회
+        List<Nutrition> nutritions = nutritionMapper.findByIds(Collections.singletonList(diet.getNutritionId()));
+        if (nutritions.isEmpty()) {
+            throw new DietNotFoundException("영양소 정보를 찾을 수 없습니다: " + diet.getNutritionId());
+        }
+        Nutrition nutrition = nutritions.get(0);
+
+        // 기존 DietSummary 조회
+        DietSummary summary = dietSummaryService.getSummaryByDate(userId, diet.getDietDate());
+        if (summary != null) {
+            // 기존 amount의 영양소 계산
+            double oldCalories = nutrition.getCalories() * diet.getAmount() / 100;
+            double oldProtein = nutrition.getProtein() * diet.getAmount() / 100;
+            double oldFat = nutrition.getFat() * diet.getAmount() / 100;
+            double oldCarbs = nutrition.getCarbohydrates() * diet.getAmount() / 100;
+
+            // 새로운 amount의 영양소 계산
+            double newCalories = nutrition.getCalories() * request.getAmount() / 100;
+            double newProtein = nutrition.getProtein() * request.getAmount() / 100;
+            double newFat = nutrition.getFat() * request.getAmount() / 100;
+            double newCarbs = nutrition.getCarbohydrates() * request.getAmount() / 100;
+
+            // 식사 타입별 칼로리 계산
+            Map<MealType, Integer> mealTypeCalories = new HashMap<>();
+            for (MealType type : MealType.values()) {
+                double existingCalories = 0;
+                switch (type) {
+                    case BREAKFAST: existingCalories = summary.getBreakfastCalories(); break;
+                    case LUNCH: existingCalories = summary.getLunchCalories(); break;
+                    case DINNER: existingCalories = summary.getDinnerCalories(); break;
+                    case SNACK: existingCalories = summary.getSnackCalories(); break;
+                    case NIGHT: existingCalories = summary.getNightCalories(); break;
+                }
+                
+                // 수정하는 식단의 식사 타입인 경우 칼로리를 업데이트
+                if (type == diet.getMealType()) {
+                    existingCalories = existingCalories - oldCalories + newCalories;
+                }
+                mealTypeCalories.put(type, (int)existingCalories);
+            }
+            
+            // 총 영양소 업데이트
+            double totalCalories = summary.getTotalCalories() - oldCalories + newCalories;
+            double totalProtein = summary.getTotalProtein() - oldProtein + newProtein;
+            double totalFat = summary.getTotalFat() - oldFat + newFat;
+            double totalCarbohydrates = summary.getTotalCarbohydrates() - oldCarbs + newCarbs;
+            
+            // DietSummary 업데이트
+            dietSummaryService.updateSummary(
+                userId, 
+                diet.getDietDate(), 
+                mealTypeCalories, 
+                (int)totalCalories, 
+                totalProtein, 
+                totalFat, 
+                totalCarbohydrates
+            );
+        }
         
         diet.updateAmount(request.getAmount());
         dietMapper.update(diet);
@@ -203,6 +295,60 @@ public class DietServiceImpl implements DietService {
         
         if (!diet.isOwner(userId)) {
             throw new UnauthorizedException("식단을 수정할 권한이 없습니다.");
+        }
+        
+        // 삭제할 식단의 영양소 정보 조회
+        List<Nutrition> nutritions = nutritionMapper.findByIds(Collections.singletonList(diet.getNutritionId()));
+        if (nutritions.isEmpty()) {
+            throw new DietNotFoundException("영양소 정보를 찾을 수 없습니다: " + diet.getNutritionId());
+        }
+        Nutrition nutrition = nutritions.get(0);
+        
+        // 해당 날짜의 DietSummary 조회
+        DietSummary summary = dietSummaryService.getSummaryByDate(userId, diet.getDietDate());
+        
+        if (summary != null) {
+            // 삭제할 식단의 영양소 계산
+            double caloriesToSubtract = nutrition.getCalories() * diet.getAmount() / 100;
+            double proteinToSubtract = nutrition.getProtein() * diet.getAmount() / 100;
+            double fatToSubtract = nutrition.getFat() * diet.getAmount() / 100;
+            double carbsToSubtract = nutrition.getCarbohydrates() * diet.getAmount() / 100;
+            
+            // 식사 타입별 칼로리 계산
+            Map<MealType, Integer> mealTypeCalories = new HashMap<>();
+            for (MealType type : MealType.values()) {
+                double existingCalories = 0;
+                switch (type) {
+                    case BREAKFAST: existingCalories = summary.getBreakfastCalories(); break;
+                    case LUNCH: existingCalories = summary.getLunchCalories(); break;
+                    case DINNER: existingCalories = summary.getDinnerCalories(); break;
+                    case SNACK: existingCalories = summary.getSnackCalories(); break;
+                    case NIGHT: existingCalories = summary.getNightCalories(); break;
+                }
+                
+                // 삭제하는 식단의 식사 타입인 경우 칼로리를 빼줌
+                if (type == diet.getMealType()) {
+                    existingCalories -= caloriesToSubtract;
+                }
+                mealTypeCalories.put(type, (int)existingCalories);
+            }
+            
+            // 총 영양소에서 빼기
+            double totalCalories = summary.getTotalCalories() - caloriesToSubtract;
+            double totalProtein = summary.getTotalProtein() - proteinToSubtract;
+            double totalFat = summary.getTotalFat() - fatToSubtract;
+            double totalCarbohydrates = summary.getTotalCarbohydrates() - carbsToSubtract;
+            
+            // DietSummary 업데이트
+            dietSummaryService.updateSummary(
+                userId, 
+                diet.getDietDate(), 
+                mealTypeCalories, 
+                (int)totalCalories, 
+                totalProtein, 
+                totalFat, 
+                totalCarbohydrates
+            );
         }
         
         dietMapper.delete(dietId);

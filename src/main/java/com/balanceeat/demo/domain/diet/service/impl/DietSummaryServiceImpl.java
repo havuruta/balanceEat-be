@@ -63,6 +63,8 @@ public class DietSummaryServiceImpl implements DietSummaryService {
             .orElse(DietSummary.create(userId, date));
         
         return DietSummaryDTO.builder()
+            .id(summary.getId())
+            .summaryDate(summary.getSummaryDate())
             .breakfastCalories(summary.getBreakfastCalories())
             .lunchCalories(summary.getLunchCalories())
             .dinnerCalories(summary.getDinnerCalories())
