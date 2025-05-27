@@ -1,7 +1,8 @@
-package com.balanceeat.demo.domain.dailyDietResult.entity;
+package com.balanceeat.demo.domain.dietScoreResult.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,5 +21,10 @@ public class DietScoreResult {
     private LocalDate date;
     private Integer score;
     private String feedback;
+    private String calorieAnalysis;
+    private String nutrientAnalysis;
+    private String suggestions1;
+    private String suggestions2;
+    private String suggestions3;
     private LocalDateTime createdAt;
 }
