@@ -33,4 +33,13 @@ public class OneTimeChatController {
             .then(Mono.just(ResponseEntity.ok("식단 분석이 완료되었습니다.")));
     }
     
+    @GetMapping("/chat")
+    public Mono<ResponseEntity<String>> getDietAnalysisWithBlocking(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        return dietAnalysisFacade.processDietAnalysisWithBlocking(userPrincipal.getId(), date)
+            .then(Mono.just(ResponseEntity.ok("식단 분석이 완료되었습니다.")));
+    }
+    
 }

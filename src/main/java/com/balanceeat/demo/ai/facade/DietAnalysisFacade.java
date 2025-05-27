@@ -46,6 +46,21 @@ public class DietAnalysisFacade {
             })
             .then();
     }
+    
+    @Transactional
+    public Mono<Void> processDietAnalysisWithBlocking(Long userId, LocalDate date) {
+        // 1. 식단 데이터 조회
+        UserDietDTO userDietDTO = createUserDietDTO(userId, date);
+        
+        // 2. AI 분석 수행 및 결과 저장
+        return oneTimeChatService.askWithBlocking(userDietDTO)
+            .doOnNext(sr -> {
+                sr.setUserId(userId);
+                sr.setDate(date);
+                dietScoreResultService.saveScore(sr);
+            })
+            .then();
+    }
     /**
      * AI 분석을 위한 사용자 식단 데이터를 생성합니다.
      * @param date 조회할 날짜
