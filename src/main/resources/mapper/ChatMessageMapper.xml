@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.balanceeat.demo.domain.chat.mapper.ChatMessageMapper">
+    
+    <insert id="insert" parameterType="com.balanceeat.demo.domain.chat.entity.ChatMessage">
+        INSERT INTO chat_messages (session_id, role, content, created_at)
+        VALUES (#{sessionId}, #{role}, #{content}, #{createdAt})
+    </insert>
+
+    <select id="findBySessionIdOrderByCreatedAtAsc" resultType="com.balanceeat.demo.domain.chat.entity.ChatMessage">
+        SELECT * FROM chat_messages 
+        WHERE session_id = #{sessionId}
+        ORDER BY created_at ASC
+    </select>
+
+    <delete id="deleteBySessionId">
+        DELETE FROM chat_messages WHERE session_id = #{sessionId}
+    </delete>
+
+</mapper> 

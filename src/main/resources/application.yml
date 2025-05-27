@@ -16,6 +16,27 @@ spring:
     redis:
       host: localhost
       port: 6379
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4
+          temperature: 0.7
+          max-tokens: 1000
+    retry:
+      max-attempts: 3            # 기본 10 → 과도 재시도를 막기 위해 축소
+      backoff:
+        initial-interval: 2s       # 첫 대기 2 초
+        multiplier: 2              # 2, 4, 8, 16, 32 초…
+        max-interval: 30s
+    chat:
+      memory:
+        repository:
+          jdbc:
+            schema: classpath:org/springframework/ai/chat/memory/repository/jdbc/schema-mysql.sql
+            initialize-schema: always
+            dialect: mysql
 
 mybatis:
   mapper-locations: classpath*:mapper/*.xml
@@ -37,4 +58,8 @@ jwt:
 
 logging:
   level:
-    root: info
+    root: INFO
+    com.balanceeat.demo: DEBUG
+    org.springframework.ai: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

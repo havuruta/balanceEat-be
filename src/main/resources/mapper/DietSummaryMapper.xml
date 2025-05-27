@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.balanceeat.demo.domain.diet.mapper.DietSummaryMapper">
+    
+    <select id="findByUserIdAndDateRange" resultType="com.balanceeat.demo.domain.diet.dto.DietSummaryDTO">
+        SELECT 
+            id,
+            user_id as userId,
+            summary_date as summaryDate,
+            total_calories as totalCalories,
+            total_protein as totalProtein,
+            total_fat as totalFat,
+            total_carbohydrates as totalCarbohydrates,
+            breakfast_calories as breakfastCalories,
+            lunch_calories as lunchCalories,
+            dinner_calories as dinnerCalories,
+            snack_calories as snackCalories,
+            night_calories as nightCalories
+        FROM diet_summary
+        WHERE user_id = #{userId}
+        AND summary_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY summary_date DESC
+    </select>
+
+</mapper> 

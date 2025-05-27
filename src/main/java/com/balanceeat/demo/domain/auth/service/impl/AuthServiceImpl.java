@@ -165,9 +165,6 @@ public class AuthServiceImpl implements AuthService {
             // 2. 액세스 토큰으로부터 인증 정보 추출
             Authentication authentication = tokenProvider.getAuthentication(accessToken, request);
             
-            // 3. 리프레시 토큰 삭제
-            refreshTokenRepository.deleteByKey(authentication.getName());
-            
             // 4. 액세스 토큰을 블랙리스트에 추가
             tokenBlacklist.addToBlacklist(accessToken, tokenProvider.getAccessTokenExpirationTime());
         }
@@ -252,9 +249,6 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = new UsernamePasswordAuthenticationToken(
             userPrincipal, null, userPrincipal.getAuthorities());
         
-        // 6. 이전 리프레시 토큰 삭제
-        refreshTokenRepository.deleteByKey(email);
-        
         // 7. 새로운 토큰 생성
         TokenDTO.Response tokenResponse = tokenProvider.generateToken(authentication);
         
@@ -278,8 +272,6 @@ public class AuthServiceImpl implements AuthService {
             log.warn("리프레시 토큰이 유효하지 않습니다.");
             throw new InvalidTokenException();
         }
-
-        Claims claims = tokenProvider.parseClaims(refreshToken);
     }
     
     private String getRefreshToken(String memberId) {

@@ -2,6 +2,7 @@ package com.balanceeat.demo.domain.user.service.impl;
 
 import com.balanceeat.demo.domain.user.dto.UserDTO;
 import com.balanceeat.demo.domain.user.dto.UserProfileDTO;
+import com.balanceeat.demo.domain.user.dto.UserResponseDTO;
 import com.balanceeat.demo.domain.user.entity.User;
 import com.balanceeat.demo.domain.user.exception.UserNotFoundException;
 import com.balanceeat.demo.domain.user.mapper.UserMapper;
@@ -60,6 +61,14 @@ public class UserServiceImpl implements UserService {
         return profile;
     }
 
+    @Override
+    public UserResponseDTO getUserResponseDTO(Long id) {
+        UserResponseDTO userResponseDTO = userMapper.getUserResponseDTO(id);
+        if (userResponseDTO == null) {
+            throw new UserNotFoundException();
+        }
+        return userResponseDTO;
+    }
     // 사용자 정보 수정
     @Override
     @Transactional
@@ -99,9 +108,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long id) {
         User user = userMapper.getUserById(id);
+    
         if(user == null || !user.isActive()) {
             throw new UserNotFoundException();
         }
         userMapper.deleteUser(id);
     }
-} 
+}

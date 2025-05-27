@@ -46,6 +46,22 @@
         WHERE id = #{id} AND is_active = true
     </select>
 
+    <select id="getUserResponseDTO" parameterType="long" resultType="com.balanceeat.demo.domain.user.dto.UserResponseDTO">
+        SELECT id,
+               email,
+               nickname,
+               birth_year,
+               gender,
+               weight,
+               height,
+               disease_code,
+               diet_habit,
+               food_blacklist,
+               food_preference
+        FROM users
+        WHERE id = #{id} AND is_active = true
+    </select>
+
     <!-- 사용자명 존재 여부 확인 -->
     <select id="existsByEmail" resultType="boolean">
         SELECT EXISTS (

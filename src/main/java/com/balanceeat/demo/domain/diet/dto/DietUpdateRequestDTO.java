@@ -7,8 +7,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DietUpdateRequestDTO {
-    private Integer amount;
-    private String note;
-    private MealType mealType;
-    private String mealTime;
-} 
+    private int amount;
+}
