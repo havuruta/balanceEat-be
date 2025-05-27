@@ -14,6 +14,7 @@ import com.balanceeat.demo.domain.auth.service.AuthService;
 import com.balanceeat.demo.domain.auth.util.AccountLockUtil;
 import com.balanceeat.demo.domain.auth.util.SecurityUtil;
 import com.balanceeat.demo.domain.user.dto.UserResponseDTO;
+import com.balanceeat.demo.domain.user.dto.UserProfileDTO;
 import com.balanceeat.demo.domain.user.entity.RefreshToken;
 import com.balanceeat.demo.domain.user.entity.User;
 import com.balanceeat.demo.domain.user.exception.UserNotFoundException;
@@ -42,6 +43,8 @@ import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 import io.jsonwebtoken.Claims;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Base64;
 
 @Slf4j
 @Service
@@ -126,13 +129,17 @@ public class AuthServiceImpl implements AuthService {
             cookieFactory.addAccessCookie(httpServletResponse, tokens.getAccessToken());
             cookieFactory.addRefreshCookie(httpServletResponse, tokens.getRefreshToken());
             
+            // 7. 사용자 프로필 정보 응답 헤더에 추가
+            UserProfileDTO userProfile = userService.getUserProfile(user.getId());
+            String userProfileJson = new ObjectMapper().writeValueAsString(userProfile);
+            httpServletResponse.setHeader("X-User-Profile", Base64.getEncoder().encodeToString(userProfileJson.getBytes("UTF-8")));
+            
             log.debug("로그인 처리 완료: {}", user.getEmail());
             
-        } catch (AuthenticationException ex) {
-            accountLockUtil.handleLoginFailure(user);   // 실패 카운팅
-            throw new BadCredentialsException(ErrorMessage.INVALID_PASSWORD_FORMAT);
+        } catch (Exception e) {
+            log.error("로그인 처리 중 오류 발생", e);
+            throw new AuthenticationException("로그인 인증에 실패했습니다.", HttpStatus.UNAUTHORIZED);
         }
-        
     }
     /**
      * 로그아웃 처리
@@ -255,7 +262,7 @@ public class AuthServiceImpl implements AuthService {
 
         refreshTokenRepository.save(
             authentication.getName(),
-            tokens.getRefreshToken(),
+            tokenResponse.getRefreshToken(),
             tokenProvider.getRefreshTokenExpirationTime()
         );
         
