@@ -28,11 +28,20 @@
     </select>
 
     <select id="getUserProfile" parameterType="long" resultType="com.balanceeat.demo.domain.user.dto.UserProfileDTO">
-        SELECT id,
-               email,
-               nickname,
-               profile_image_url AS profileImageUrl,
-               goal_message AS goalMessage
+        SELECT 
+            email,
+            nickname,
+            profile_image_url AS profileImageUrl,
+            goal_message AS goalMessage,
+            is_challenge_enabled AS isChallengeEnabled,
+            birth_year AS birthYear,
+            gender,
+            weight,
+            height,
+            disease_code AS diseaseCode,
+            diet_habit AS dietHabit,
+            food_blacklist AS foodBlacklist,
+            food_preference AS foodPreference
         FROM users
         WHERE id = #{id} AND is_active = true
     </select>
@@ -55,6 +64,14 @@
             <if test="newPassword != null and newPassword != ''">
                 password = #{newPassword},
             </if>
+            birth_year = #{birthYear},
+            gender = #{gender},
+            weight = #{weight},
+            height = #{height},
+            disease_code = #{diseaseCode},
+            diet_habit = #{dietHabit},
+            food_blacklist = #{foodBlacklist},
+            food_preference = #{foodPreference},
             updated_at = NOW()
         WHERE id = #{id} AND is_active = true
     </update>
