@@ -64,6 +64,7 @@ public class SecurityConfig {
 				.requestMatchers(antMatcher("/swagger-ui/**")).permitAll()
 				.requestMatchers(antMatcher("/v3/api-docs/**")).permitAll()
 				.requestMatchers(antMatcher("/api/nutrition/**")).permitAll()
+				.requestMatchers(antMatcher("/api/user/**")).authenticated()
 				.anyRequest().authenticated()
 		);
 		//---------------------------------------------

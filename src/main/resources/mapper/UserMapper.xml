@@ -74,21 +74,40 @@
     
     <!-- 사용자 정보 수정 -->
     <update id="updateUser" parameterType="com.balanceeat.demo.domain.user.dto.UserDTO">
-        UPDATE users 
-        SET 
-            nickname = #{nickname},
+        UPDATE users
+        <set>
+            <if test="nickname != null and nickname != ''">
+                nickname = #{nickname},
+            </if>
             <if test="newPassword != null and newPassword != ''">
                 password = #{newPassword},
             </if>
-            birth_year = #{birthYear},
-            gender = #{gender},
-            weight = #{weight},
-            height = #{height},
-            disease_code = #{diseaseCode},
-            diet_habit = #{dietHabit},
-            food_blacklist = #{foodBlacklist},
-            food_preference = #{foodPreference},
+            <if test="birthYear != 0">
+                birth_year = #{birthYear},
+            </if>
+            <if test="gender != null">
+                gender = #{gender},
+            </if>
+            <if test="weight != 0">
+                weight = #{weight},
+            </if>
+            <if test="height != 0">
+                height = #{height},
+            </if>
+            <if test="diseaseCode != null and diseaseCode != ''">
+                disease_code = #{diseaseCode},
+            </if>
+            <if test="dietHabit != null and dietHabit != ''">
+                diet_habit = #{dietHabit},
+            </if>
+            <if test="foodBlacklist != null and foodBlacklist != ''">
+                food_blacklist = #{foodBlacklist},
+            </if>
+            <if test="foodPreference != null and foodPreference != ''">
+                food_preference = #{foodPreference},
+            </if>
             updated_at = NOW()
+        </set>
         WHERE id = #{id} AND is_active = true
     </update>
     
