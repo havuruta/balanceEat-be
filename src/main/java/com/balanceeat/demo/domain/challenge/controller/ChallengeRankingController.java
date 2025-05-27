@@ -11,7 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/challenge/ranking")
+@RequestMapping("/challenge/rankings")
 @RequiredArgsConstructor
 @Tag(name = "Challenge Ranking API", description = "챌린지 랭킹 조회 API")
 public class ChallengeRankingController {

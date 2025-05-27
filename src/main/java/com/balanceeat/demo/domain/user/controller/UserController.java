@@ -4,18 +4,12 @@ import com.balanceeat.demo.domain.user.dto.UserDTO;
 import com.balanceeat.demo.domain.user.dto.UserProfileDTO;
 import com.balanceeat.demo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.yaml.snakeyaml.events.Event;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,7 +33,6 @@ public class UserController {
             log.error("사용자 프로필 조회 중 오류 발생", e);
             return ResponseEntity.status(500)
                     .body(UserProfileDTO.builder()
-                            .id(null)
                             .nickname("Error")
                             .profileImageUrl(null)
                             .goalMessage(e.getMessage())
